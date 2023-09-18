@@ -5,7 +5,14 @@
 DyOCSP is an OCSP responder for private CA, and implementation of [RFC 6960](https://www.rfc-editor.org/rfc/rfc6960) and [RFC 5019](https://www.rfc-editor.org/rfc/rfc5019).
 The objective is to have a responder with flexible database backend choices.
 
-## Installation
+## Download
+- Get the latest binary from [releases](https://github.com/yuxki/dyocsp/releases).
+- Or get the sources:
+```
+git clone https://github.com/yuxki/dyocsp
+```
+Please try [Demo](#Demo) after download.
+
 
 ## Supported Environments
 #### Database
