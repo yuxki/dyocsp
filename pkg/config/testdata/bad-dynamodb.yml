@@ -1,0 +1,25 @@
+version: "9999999" # Bad
+expiration: "gn" # Bad
+log:
+  level: "ng"   # Bad
+  format: "ng"  # Bad
+responder:
+  ca: "sub-ca"
+  responder_certificate: "dyocsp/testdata/sub-ocsp-rsa.crt"
+  responder_key: "dyocsp/testdata/sub-ocsp-rsa-pkcs8.key"
+  issuer_certificate: "dyocsp/testdata/sub-ca-rsa.crt"
+cache:
+  interval: 0 # Bad
+  delay: -1   # Bad
+db:
+  dynamodb:
+    region: "us-west-2"
+    table_name: "test_ca_db"
+    ca_gsi: "ca_gsi"
+    endpoint: "ng"         # Bad
+    retry_max_attempts: -1 # Bad
+    timeout: 0             # Bad
+http:
+  addr: ""
+  port: "ng"               # Bad
+  cache_control_max_age: 0 # Bad

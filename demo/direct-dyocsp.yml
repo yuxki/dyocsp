@@ -1,0 +1,18 @@
+version: 0.1
+log:
+  level: "info"
+  format: "pretty"
+responder:
+  ca: "demo-direct-sign-ca"
+  responder_certificate: "ca/sub-ca.crt"
+  responder_key: "ca/sub-ca.key"
+  issuer_certificate: "ca/root-ca.crt"
+cache:
+  interval: 30
+  delay: 5
+db:
+  file:
+    file: "db/root-filedb"
+http:
+  addr: "localhost"
+  port: 9080

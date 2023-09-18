@@ -1,0 +1,70 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            8c:a7:b3:fe:5d:7f:00:76:73:c1:8c:cc:6a:1f:81:80:85:cd:c5:f6
+        Signature Algorithm: sha256WithRSAEncryption
+        Issuer: C=US, O=Example Organization, CN=Sub CA
+        Validity
+            Not Before: Aug 27 00:07:11 2023 GMT
+            Not After : Sep 26 00:07:11 2023 GMT
+        Subject: C=US, O=Example Organization, CN=Sub CA
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (384 bit)
+                pub:
+                    04:f1:66:14:ad:97:d9:00:53:f3:f9:0a:79:00:7b:
+                    37:51:ec:5a:c1:bf:df:27:bb:db:c2:45:44:d1:79:
+                    71:f4:06:ea:01:67:af:ac:14:66:4e:6a:5b:08:b6:
+                    36:a9:f3:f4:46:96:60:61:a5:77:6e:b9:e6:8a:cc:
+                    cf:0b:af:7e:8c:2d:23:f6:9a:e5:82:87:95:2a:02:
+                    9d:40:28:46:1e:bc:34:f5:73:e2:12:b7:03:0d:f7:
+                    86:b4:4a:40:43:5e:64
+                ASN1 OID: secp384r1
+                NIST CURVE: P-384
+        X509v3 extensions:
+            X509v3 Authority Key Identifier: 
+                keyid:61:13:EE:7A:49:EA:79:B6:25:CD:BE:79:87:DB:E1:F3:5D:03:A5:3F
+
+            X509v3 Basic Constraints: critical
+                CA:FALSE
+            X509v3 Extended Key Usage: 
+                OCSP Signing
+            X509v3 Key Usage: critical
+                Digital Signature
+            X509v3 Subject Key Identifier: 
+                6E:34:38:4E:E5:C6:0E:C7:DE:F2:2C:F7:6C:25:56:6A:B5:DB:9B:2D
+    Signature Algorithm: sha256WithRSAEncryption
+         1b:47:e3:d9:c5:ba:3f:23:fd:f2:97:96:ee:0f:b6:b7:ef:88:
+         6d:54:1d:11:96:5f:be:36:b1:1d:98:09:c2:fc:30:7c:6f:d6:
+         34:02:1e:0e:1a:d2:05:60:d2:be:cb:08:7c:ce:b9:ba:87:ac:
+         17:74:b0:1d:1e:19:0e:a5:1c:d6:af:fd:e8:f4:af:a4:be:a7:
+         11:ec:dc:e5:5a:4c:25:f2:ce:a0:73:22:14:4c:0c:be:43:0d:
+         58:cd:bd:cc:d0:b2:eb:c9:e6:55:88:8c:47:09:90:7a:d3:63:
+         37:44:cb:c9:57:ef:1b:76:cc:9d:b0:b9:29:43:6d:6f:b0:5b:
+         7b:79:be:ae:cb:fe:61:f1:21:c1:2f:36:b4:11:a4:25:f0:15:
+         4d:8a:53:b8:16:a4:7a:18:e8:0c:a3:e2:7e:9b:d4:63:15:93:
+         d6:13:ed:ab:c5:51:fe:67:e6:82:64:93:6d:40:2b:79:92:c4:
+         be:92:2d:56:94:ed:22:12:09:16:43:65:9b:88:b2:46:6f:4a:
+         a0:27:7c:ff:5c:e6:e2:0d:1e:82:45:5a:e0:d6:05:53:88:a3:
+         f4:e1:3a:04:28:1e:fe:11:52:1e:72:a6:ba:5b:31:04:f4:c4:
+         d9:62:ae:5b:8d:e8:43:59:43:b1:7f:38:db:95:9e:07:33:62:
+         50:8c:a3:4d
+-----BEGIN CERTIFICATE-----
+MIIC0DCCAbigAwIBAgIVAIyns/5dfwB2c8GMzGofgYCFzcX2MA0GCSqGSIb3DQEB
+CwUAMD0xCzAJBgNVBAYTAlVTMR0wGwYDVQQKDBRFeGFtcGxlIE9yZ2FuaXphdGlv
+bjEPMA0GA1UEAwwGU3ViIENBMB4XDTIzMDgyNzAwMDcxMVoXDTIzMDkyNjAwMDcx
+MVowPTELMAkGA1UEBhMCVVMxHTAbBgNVBAoMFEV4YW1wbGUgT3JnYW5pemF0aW9u
+MQ8wDQYDVQQDDAZTdWIgQ0EwdjAQBgcqhkjOPQIBBgUrgQQAIgNiAATxZhStl9kA
+U/P5CnkAezdR7FrBv98nu9vCRUTReXH0BuoBZ6+sFGZOalsItjap8/RGlmBhpXdu
+ueaKzM8Lr36MLSP2muWCh5UqAp1AKEYevDT1c+IStwMN94a0SkBDXmSjdTBzMB8G
+A1UdIwQYMBaAFGET7npJ6nm2Jc2+eYfb4fNdA6U/MAwGA1UdEwEB/wQCMAAwEwYD
+VR0lBAwwCgYIKwYBBQUHAwkwDgYDVR0PAQH/BAQDAgeAMB0GA1UdDgQWBBRuNDhO
+5cYOx97yLPdsJVZqtdubLTANBgkqhkiG9w0BAQsFAAOCAQEAG0fj2cW6PyP98peW
+7g+2t++IbVQdEZZfvjaxHZgJwvwwfG/WNAIeDhrSBWDSvssIfM65uoesF3SwHR4Z
+DqUc1q/96PSvpL6nEezc5VpMJfLOoHMiFEwMvkMNWM29zNCy68nmVYiMRwmQetNj
+N0TLyVfvG3bMnbC5KUNtb7Bbe3m+rsv+YfEhwS82tBGkJfAVTYpTuBakehjoDKPi
+fpvUYxWT1hPtq8VR/mfmgmSTbUAreZLEvpItVpTtIhIJFkNlm4iyRm9KoCd8/1zm
+4g0egkVa4NYFU4ij9OE6BCge/hFSHnKmulsxBPTE2WKuW43oQ1lDsX8425WeBzNi
+UIyjTQ==
+-----END CERTIFICATE-----

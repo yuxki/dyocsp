@@ -1,0 +1,18 @@
+version: 0.1
+log:
+  level: "debug"
+  format: "pretty"
+responder:
+  ca: "sub-ca"
+  responder_certificate: "testdata/sub-ocsp-rsa.crt"
+  # Read from environment variable
+  # responder_key: "testdata/sub-ocsp-rsa-pkcs8.key"
+  issuer_certificate: "testdata/sub-ca-rsa.crt"
+cache:
+  interval: 120
+db:
+  file:
+    file: "testdata/filedb"
+http:
+  addr: "localhost"
+  port: 9080

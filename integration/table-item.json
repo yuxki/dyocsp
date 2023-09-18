@@ -1,0 +1,36 @@
+{
+  "RequestItems": {
+    "string": [
+      {
+        "PutRequest": {
+          "Item": {
+            "ca": {
+              "S": "string"
+            },
+            "serial": {
+              "S": "string"
+            },
+            "rev_type": {
+              "S": "string"
+            },
+            "exp_date": {
+              "S": "string"
+            },
+            "rev_date": {
+              "S": "string"
+            },
+            "file_name": {
+              "S": "string"
+            },
+            "subject_name": {
+              "S": "string"
+            },
+            "crl_reason": {
+              "S": "string"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

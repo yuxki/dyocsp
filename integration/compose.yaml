@@ -1,0 +1,36 @@
+---
+services:
+  dyocsp:
+    environment:
+      AWS_ACCESS_KEY_ID: "dymmy"
+      AWS_SECRET_ACCESS_KEY: "dummy"
+    image: "${TEST_TARGET_TAG}"
+    ports:
+      - "8080:80"
+    networks:
+      integration_network:
+    depends_on:
+      - dynamodb-local
+    volumes:
+      - "./tmp-cas:/cas"
+      - "./dyocsp.yml:/dyocsp/dyocsp.yml"
+    command: -c /dyocsp/dyocsp.yml
+
+  dynamodb-local:
+    user: root
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
+    image: "amazon/dynamodb-local:latest"
+    container_name: dynamodb-local
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./docker/dynamodb:/home/dynamodblocal/data"
+    working_dir: /home/dynamodblocal
+    networks:
+      integration_network:
+
+networks:
+  integration_network:
+    driver: bridge
+    ipam:
+      driver: default

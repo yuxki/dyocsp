@@ -1,0 +1,21 @@
+version: 0.1
+log:
+  level: "debug"
+  format: "json"
+responder:
+  ca: "sub-ca"
+  responder_certificate: "/cas/sub-ca/sub-ocsp.crt"
+  responder_key: "/cas/sub-ca/private/sub-ocsp.key"
+  issuer_certificate: "/cas/sub-ca/sub-ca.crt"
+cache:
+  interval: 5
+  delay: 2
+db:
+  dynamodb:
+    region: "us-west-2"
+    table_name: "test_ca_db"
+    ca_gsi: "ca_gsi"
+    endpoint: "http://dynamodb-local:8000"
+    retry_max_attempts: 10
+http:
+  port: 80

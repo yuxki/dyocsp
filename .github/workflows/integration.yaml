@@ -1,0 +1,88 @@
+---
+name: Run Integration Tests
+env:
+  PROJECT_NAME: dyocsp
+  TEST_TARGET_TAG: dyocsp:testing
+  TEST_SOURCE_TAG: integration:testing
+
+on:
+  workflow_call:
+    inputs:
+      compose_file:
+        required: true
+        type: string
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      # Build binary
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.20.7'
+      - uses: goreleaser/goreleaser-action@v4
+        with:
+          install-only: true
+      - run: |
+          goreleaser build --snapshot --single-target
+
+      # Build docker image
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build test target dyocsp image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          load: true
+          tags: ${{ env.TEST_TARGET_TAG }}
+
+      # Prepare Test Data & testing Image
+      - run: |
+          cp -r scripts integration/
+          mkdir -p integration/tmp-cas
+          ./scripts/gen-certs.sh integration/tmp-cas
+      - uses: docker/build-push-action@v4
+        with:
+          context: integration
+          load: true
+          tags: ${{ env.TEST_SOURCE_TAG }}
+      - run: |
+          docker compose \
+            -f integration/compose.yaml \
+            -f ${{ inputs.compose_file }} \
+            --project-name "${{ env.PROJECT_NAME }}" \
+            --project-directory "integration" \
+            up -d
+          docker compose \
+            -f integration/compose.yaml \
+            -f ${{ inputs.compose_file }} \
+            --project-name "${{ env.PROJECT_NAME }}" \
+            --project-directory "integration" \
+            logs
+
+      - name: Run test
+        run: |
+          docker run --rm \
+            --network ${{ env.PROJECT_NAME }}_integration_network \
+            ${{ env.TEST_SOURCE_TAG }} ./test-dynamodb.sh
+      - name: Log & Down
+        if: always()
+        run: |
+          docker compose \
+            -f integration/compose.yaml \
+            -f ${{ inputs.compose_file }} \
+            --project-name "${{ env.PROJECT_NAME }}" \
+            --project-directory "integration" \
+            logs
+          docker compose \
+            -f integration/compose.yaml \
+            -f ${{ inputs.compose_file }} \
+            --project-name "${{ env.PROJECT_NAME }}" \
+            --project-directory "integration" \
+            down

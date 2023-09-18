@@ -1,0 +1,14 @@
+version: 0.1
+responder:
+  ca: "sub-ca"
+  responder_certificate: "dyocsp/testdata/sub-ocsp-rsa.crt"
+  responder_key: "dyocsp/testdata/sub-ocsp-rsa-pkcs8.key"
+  issuer_certificate: "dyocsp/testdata/sub-ca-rsa.crt"
+cache:
+  interval: 60
+  delay: 61 # Bad
+db:
+  dynamodb:
+    region: "us-west-2"
+    table_name: "test_ca_db"
+    ca_gsi: "ca_gsi"

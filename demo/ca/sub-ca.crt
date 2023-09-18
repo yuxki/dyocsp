@@ -1,0 +1,96 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            1c:a7:b3:fe:5d:7f:00:76:73:c1:8c:cc:6a:1f:81:80:85:cd:c5:f6
+        Signature Algorithm: sha256WithRSAEncryption
+        Issuer: C=US, O=Example Organization, CN=Root CA
+        Validity
+            Not Before: Sep 12 06:47:25 2023 GMT
+            Not After : Sep  9 06:47:25 2033 GMT
+        Subject: C=US, O=Example Organization, CN=Sub CA
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                RSA Public-Key: (2048 bit)
+                Modulus:
+                    00:ec:04:80:fe:c5:46:00:10:02:d9:81:ff:81:7b:
+                    f1:55:7b:8a:f2:5d:24:f3:ef:2e:41:79:61:9f:b1:
+                    16:5c:02:4f:ed:bf:63:86:8d:23:0e:da:58:68:11:
+                    0a:74:ed:f6:8c:4d:f4:40:a4:18:cb:f5:df:fb:c8:
+                    9c:89:73:1b:34:f1:09:ee:da:5d:8a:32:93:b4:ff:
+                    58:05:1e:4c:bc:0f:62:b8:be:fb:84:5e:e6:be:40:
+                    66:1b:ff:43:f3:d8:ac:b5:ee:9c:92:10:75:67:73:
+                    b4:1b:65:97:4e:da:a9:99:02:02:0c:54:a3:46:72:
+                    bb:f7:d5:b5:c1:2a:a6:20:56:02:c6:77:2d:ba:e5:
+                    09:1b:d2:72:43:da:48:67:5c:29:db:f4:b6:c0:13:
+                    11:63:ee:5c:06:20:15:14:44:89:84:e7:99:cd:98:
+                    78:1a:94:73:2e:4e:c1:06:af:6b:de:93:cc:7e:34:
+                    ac:91:b8:30:ac:11:70:11:1e:f9:59:94:1e:17:2c:
+                    5f:87:f6:1e:bf:73:1c:f2:d3:c0:66:99:4e:c6:f8:
+                    aa:e0:2b:c9:74:69:5c:5a:ab:c3:af:6b:82:05:95:
+                    78:e3:24:6d:ba:af:00:4f:f8:c2:67:eb:6c:9a:e0:
+                    b9:46:65:5e:db:79:ea:46:80:ad:10:6b:0f:dd:40:
+                    ce:c3
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            Authority Information Access: 
+                CA Issuers - URI:http://root-ca.example.com/root-ca.crt
+                OCSP - URI:http://localhost:8080
+
+            X509v3 Authority Key Identifier: 
+                keyid:0E:6C:DE:91:C3:8F:12:F0:1C:83:8A:F4:54:39:73:62:E9:A5:CB:4F
+
+            X509v3 Basic Constraints: critical
+                CA:TRUE, pathlen:0
+            X509v3 CRL Distribution Points: 
+
+                Full Name:
+                  URI:http://root-ca.example.com/root-ca.crl
+
+            X509v3 Extended Key Usage: 
+                TLS Web Client Authentication, TLS Web Server Authentication
+            X509v3 Key Usage: critical
+                Certificate Sign, CRL Sign
+            X509v3 Subject Key Identifier: 
+                24:78:B2:EE:34:E0:6B:E5:D1:33:FE:E1:D0:0B:EA:AC:DD:DB:57:77
+    Signature Algorithm: sha256WithRSAEncryption
+         0c:50:b7:c6:3c:0c:6f:eb:dc:ba:fb:0a:e7:fb:c2:ac:1a:a1:
+         cf:c8:fe:1e:cc:d3:f0:a0:73:2b:0a:5d:0f:64:21:da:32:dd:
+         d5:64:5d:63:c4:c7:ca:68:6f:2d:76:d2:22:4d:d4:fc:35:96:
+         7f:77:09:21:e5:eb:87:64:0b:57:90:93:df:77:d0:54:68:8f:
+         d5:b7:74:f1:fa:e4:01:f1:05:c6:95:fa:e7:bf:36:2b:76:44:
+         7c:b0:76:b2:f5:0a:b5:0a:bb:43:28:6d:1f:b9:15:67:38:01:
+         15:23:d4:c2:58:7b:81:db:2a:27:4d:77:79:2b:bd:89:10:76:
+         5a:57:d8:ad:44:77:77:0a:62:72:35:a8:55:10:94:03:87:0b:
+         40:e9:a7:e0:be:32:45:88:cb:80:da:91:d9:7e:48:01:79:c7:
+         67:0e:f5:01:c0:b1:d3:86:e9:85:6d:4b:42:6d:7b:db:66:8b:
+         46:8f:2e:75:37:b8:11:ac:08:46:42:f2:2c:d7:06:94:0e:b1:
+         ac:23:c4:73:b0:58:e2:93:38:f7:98:2e:98:b3:5c:d6:36:f7:
+         37:35:88:9f:39:a4:e5:af:31:d7:0c:05:8c:c7:bd:12:c1:27:
+         6a:1f:2f:59:1d:53:18:1a:d4:8a:fe:f2:55:5f:eb:9f:e7:53:
+         e3:46:6b:84
+-----BEGIN CERTIFICATE-----
+MIIEMjCCAxqgAwIBAgIUHKez/l1/AHZzwYzMah+BgIXNxfYwDQYJKoZIhvcNAQEL
+BQAwPjELMAkGA1UEBhMCVVMxHTAbBgNVBAoMFEV4YW1wbGUgT3JnYW5pemF0aW9u
+MRAwDgYDVQQDDAdSb290IENBMB4XDTIzMDkxMjA2NDcyNVoXDTMzMDkwOTA2NDcy
+NVowPTELMAkGA1UEBhMCVVMxHTAbBgNVBAoMFEV4YW1wbGUgT3JnYW5pemF0aW9u
+MQ8wDQYDVQQDDAZTdWIgQ0EwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
+AQDsBID+xUYAEALZgf+Be/FVe4ryXSTz7y5BeWGfsRZcAk/tv2OGjSMO2lhoEQp0
+7faMTfRApBjL9d/7yJyJcxs08Qnu2l2KMpO0/1gFHky8D2K4vvuEXua+QGYb/0Pz
+2Ky17pySEHVnc7QbZZdO2qmZAgIMVKNGcrv31bXBKqYgVgLGdy265Qkb0nJD2khn
+XCnb9LbAExFj7lwGIBUURImE55nNmHgalHMuTsEGr2vek8x+NKyRuDCsEXARHvlZ
+lB4XLF+H9h6/cxzy08BmmU7G+KrgK8l0aVxaq8Ova4IFlXjjJG26rwBP+MJn62ya
+4LlGZV7beepGgK0Qaw/dQM7DAgMBAAGjggEnMIIBIzBlBggrBgEFBQcBAQRZMFcw
+MgYIKwYBBQUHMAKGJmh0dHA6Ly9yb290LWNhLmV4YW1wbGUuY29tL3Jvb3QtY2Eu
+Y3J0MCEGCCsGAQUFBzABhhVodHRwOi8vbG9jYWxob3N0OjgwODAwHwYDVR0jBBgw
+FoAUDmzekcOPEvAcg4r0VDlzYumly08wEgYDVR0TAQH/BAgwBgEB/wIBADA3BgNV
+HR8EMDAuMCygKqAohiZodHRwOi8vcm9vdC1jYS5leGFtcGxlLmNvbS9yb290LWNh
+LmNybDAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwEwDgYDVR0PAQH/BAQD
+AgEGMB0GA1UdDgQWBBQkeLLuNOBr5dEz/uHQC+qs3dtXdzANBgkqhkiG9w0BAQsF
+AAOCAQEADFC3xjwMb+vcuvsK5/vCrBqhz8j+HszT8KBzKwpdD2Qh2jLd1WRdY8TH
+ymhvLXbSIk3U/DWWf3cJIeXrh2QLV5CT33fQVGiP1bd08frkAfEFxpX65782K3ZE
+fLB2svUKtQq7QyhtH7kVZzgBFSPUwlh7gdsqJ013eSu9iRB2WlfYrUR3dwpicjWo
+VRCUA4cLQOmn4L4yRYjLgNqR2X5IAXnHZw71AcCx04bphW1LQm1722aLRo8udTe4
+EawIRkLyLNcGlA6xrCPEc7BY4pM495gumLNc1jb3NzWInzmk5a8x1wwFjMe9EsEn
+ah8vWR1TGBrUiv7yVV/rn+dT40ZrhA==
+-----END CERTIFICATE-----

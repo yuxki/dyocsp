@@ -1,0 +1,12 @@
+---
+services:
+  dyocsp:
+    environment:
+      DYOCSP_PORT: 80
+      DYOCSP_ADDR: 127.0.0.1
+      DYOCSP_BACKEND: "dynamodb"
+      DYOCSP_DYNAMO_DB_ENDPOINT: "dynamodb-local:8000"
+      DYOCSP_BATCH_INTERVAL: 2
+      DYOCSP_CA_CERT: "/cas/root-ca/root-ca.crt"
+      DYOCSP_R_SINGER_CERT: "/cas/sub-ca/sub-ca.crt"
+      DYOCSP_R_SINGER_KEY: "/cas/sub-ca/private/sub-ca.key"

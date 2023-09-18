@@ -1,0 +1,18 @@
+version: 0.1
+log:
+  level: "info"
+  format: "pretty"
+responder:
+  ca: "demo-sign-delegated-ca"
+  responder_certificate: "ca/sub-ocsp.crt"
+  responder_key: "ca/sub-ocsp.key"
+  issuer_certificate: "ca/sub-ca.crt"
+cache:
+  interval: 10
+  delay: 2
+db:
+  file:
+    file: "db/sub-filedb"
+http:
+  addr: "localhost"
+  port: 9080

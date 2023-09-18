@@ -1,0 +1,16 @@
+version: 0.1
+log:
+  level: "debug"
+responder:
+  ca: "sub-ca"
+  responder_certificate: "dyocsp/testdata/sub-ocsp-rsa.crt"
+  responder_key: "dyocsp/testdata/sub-ocsp-rsa-pkcs8.key"
+  issuer_certificate: "dyocsp/testdata/sub-ca-rsa.crt"
+cache:
+  interval: 120
+db:
+  file:
+    file: ""
+http:
+  addr: "localhost"
+  port: 8080

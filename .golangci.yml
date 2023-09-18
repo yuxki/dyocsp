@@ -1,0 +1,127 @@
+---
+linters-settings:
+  staticcheck:
+    go: '1.20'
+  stylecheck:
+    go: '1.20'
+  gocyclo:
+    min-complexity: 15
+  exhaustive:
+    ignore-enum-types: "crypto.+"
+  varnamelen:
+    ignore-names:
+      - err
+      - serial
+      - ca
+      - ok
+    ignore-decls:
+      - w http.ResponseWriter
+      - h http.Handler
+      - r *http.Request
+  tagliatelle:
+    case:
+      rules:
+        yaml: snake
+  gosec:
+    excludes:
+      - G401 # OCSP repponder uses SHA1
+      - G505 # OCSP repponder uses SHA1
+  revive:
+    rules:
+      - name: struct-tag
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+        disabled: true
+      - name: if-return
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: package-comments
+        disabled: true
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unused-parameter
+        disabled: true
+      - name: unreachable-code
+      - name: redefines-builtin-id
+  depguard:
+    rules:
+      main:
+        deny:
+          - pkg: "github.com/pkg/errors"
+            desc: Should be replaced by standard lib errors package
+  funlen:
+    lines: 120
+
+linters:
+  enable-all: true
+  disable:
+    # Deprecated
+    - exhaustivestruct
+    - golint
+    - maligned
+    - deadcode
+    - ifshort
+    - varcheck
+    - interfacer
+    - structcheck
+    - nosnakecase
+    - scopelint
+    - structcheck
+    - exhaustruct
+    # Opt outs
+    - testpackage # Too Strict
+    - wrapcheck # Too Strict
+    - nolintlint # Too Strict
+    - wsl # Too Strict
+    - nlreturn # Too Strict
+    - nonamedreturns # Too Strict
+    - cyclop # Use gocyclo
+
+issues:
+  exclude-rules:
+    - linters:
+        - ireturn # Too strict
+        - funlen # Too strict
+      path: 'main.go'
+    - linters:
+        - wrapcheck # Too strict
+        - funlen # Too strict
+        - cyclop # Use gocyclo
+        - noctx # Too strict
+        - nilerr # Too strict
+        - exhaustruct # Too strict
+        - goconst # Too strict
+        - gocognit  # Too strict
+        - unparam  # Too strict
+        - goerr113 # Too strict
+        - maintidx # Too strict
+        - lll # Too strict
+      path: '((.+)_test|testing)\.go'
+    - text: Potential HTTP request made with variable url
+      path: '((.+)_test|testing)\.go'
+      linters:
+        - gosec
+    - text: Use of weak random number generator
+      path: '((.+)_test|testing)\.go'
+      linters:
+        - gosec
+    - text: variable name 'd' is too short for the scope of its usage
+      path: '((.+)_test|testing)\.go'
+      linters:
+        - varnamelen
+    - path: 'exp_ctl_test.go'
+      linters:
+        - dupl

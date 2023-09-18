@@ -1,0 +1,31 @@
+version: 0.1
+strict: false
+expiration: "ignore" # has default
+log:
+  level: "info"  # has default
+  format: "json" # has default
+responder:
+  ca: "sub-ca"
+  responder_certificate: "dyocsp/testdata/sub-ocsp-rsa.crt"
+  responder_key: "dyocsp/testdata/sub-ocsp-rsa-pkcs8.key"
+  issuer_certificate: "dyocsp/testdata/sub-ca-rsa.crt"
+cache:
+  interval: 60  # has default
+  delay: 5  # has default
+db:
+  dynamodb:
+    region: "us-west-2"
+    table_name: "test_ca_db"
+    ca_gsi: "ca_gsi"
+    endpoint: ""           # has default
+    retry_max_attempts: 0  # has default
+    timeout: 60            # has default
+http:
+  addr: ""  # has default
+  port: 80  # has default
+  read_timeout: 30 # has default
+  write_timeout: 0 # has default
+  read_header_timeout: 10 # has default
+  max_header_bytes: 1048576 # has default 1M
+  max_request_bytes: 256 # has default
+  cache_control_max_age: 60 # has default (same as cache.interval)

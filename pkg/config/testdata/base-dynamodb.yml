@@ -1,0 +1,31 @@
+version: 0.1
+strict: true
+expiration: "warn"
+log:
+  level: "debug"
+  format: "pretty"
+responder:
+  ca: "sub-ca"
+  responder_certificate: "dyocsp/testdata/sub-ocsp-rsa.crt"
+  responder_key: "dyocsp/testdata/sub-ocsp-rsa-pkcs8.key"
+  issuer_certificate: "dyocsp/testdata/sub-ca-rsa.crt"
+cache:
+  interval: 120
+  delay: 3
+db:
+  dynamodb:
+    region: "us-west-2"
+    table_name: "test_ca_db"
+    ca_gsi: "ca_gsi"
+    endpoint: "http://localhost:8000"
+    retry_max_attempts: 10
+    timeout: 120
+http:
+  addr: "localhost"
+  port: 8080
+  read_timeout: 33
+  write_timeout: 33
+  read_header_timeout: 33
+  max_header_bytes: 33333333
+  max_request_bytes: 333
+  cache_control_max_age: 33
