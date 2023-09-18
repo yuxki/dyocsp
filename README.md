@@ -1,5 +1,6 @@
 # DyOCSP - Flexible DB OCSP Responder
 [![Run Tests](https://github.com/yuxki/dyocsp/actions/workflows/test.yaml/badge.svg)](https://github.com/yuxki/dyocsp/actions/workflows/test.yaml)
+[![codecov](https://codecov.io/gh/yuxki/dyocsp/graph/badge.svg?token=Y8QR7WP3L7)](https://codecov.io/gh/yuxki/dyocsp)
 
 ## Introduction
 DyOCSP is an OCSP responder for private CA, and implementation of [RFC 6960](https://www.rfc-editor.org/rfc/rfc6960) and [RFC 5019](https://www.rfc-editor.org/rfc/rfc5019).
