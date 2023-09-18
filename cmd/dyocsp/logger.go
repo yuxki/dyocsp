@@ -3,9 +3,9 @@ package main
 import (
 	"os"
 
-	"github.com/yuxki/dyocsp/pkg/config"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/yuxki/dyocsp/pkg/config"
 )
 
 func setupLogger(cfg config.DyOCSPConfig) {

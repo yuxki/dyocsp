@@ -8,10 +8,10 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/yuxki/dyocsp/pkg/cache"
-	"github.com/yuxki/dyocsp/pkg/db"
 	"github.com/justinas/alice"
 	"github.com/rs/zerolog"
+	"github.com/yuxki/dyocsp/pkg/cache"
+	"github.com/yuxki/dyocsp/pkg/db"
 	"golang.org/x/crypto/ocsp"
 )
 

@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/yuxki/dyocsp/pkg/cache"
 	"github.com/yuxki/dyocsp/pkg/db"
-	"github.com/rs/zerolog/log"
 )
 
 type StubCADBClient struct {

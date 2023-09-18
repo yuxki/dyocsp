@@ -6,9 +6,9 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/yuxki/dyocsp/pkg/cache"
 	"github.com/yuxki/dyocsp/pkg/db"
-	"github.com/rs/zerolog"
 )
 
 type expirationLogger struct {

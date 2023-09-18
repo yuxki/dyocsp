@@ -11,15 +11,15 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/yuxki/dyocsp"
-	"github.com/yuxki/dyocsp/pkg/cache"
-	"github.com/yuxki/dyocsp/pkg/config"
-	"github.com/yuxki/dyocsp/pkg/db"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/justinas/alice"
 	"github.com/rs/zerolog/hlog"
 	"github.com/rs/zerolog/log"
+	"github.com/yuxki/dyocsp"
+	"github.com/yuxki/dyocsp/pkg/cache"
+	"github.com/yuxki/dyocsp/pkg/config"
+	"github.com/yuxki/dyocsp/pkg/db"
 	"gopkg.in/yaml.v3"
 )
 
