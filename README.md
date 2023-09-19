@@ -9,6 +9,10 @@ The objective is to have a responder with flexible database backend choices.
 
 ## Download
 - Get the latest binary from [releases](https://github.com/yuxki/dyocsp/releases).
+- Or pull [docker image](https://hub.docker.com/r/yuxki/dyocsp):
+```
+docker pull yuxki/dyocsp:v0.1.0
+```
 - Or get the sources:
 ```
 git clone https://github.com/yuxki/dyocsp
@@ -33,10 +37,18 @@ Documentation is available here: [manual](docs/index.md)
 ## Demo
 ### Start OCSP Responder Server
 Build and run `dyocsp` with a demo configuration file, certificate, and key.
+- Binary
 ```bash
 $ cd ./demo
 $ go build ../cmd/dyocsp
 $ ./dyocsp -c delegate-dyocsp.yml
+```
+
+- Docker Image
+```bash
+$ cd ./demo
+$ docker pull yuxki/dyocsp:v0.1.0
+$ docker run --rm -v $(pwd):/work --workdir=/work yuxki/dyocsp:v0.1.0 -c delegate-dyocsp.yml
 ```
 
 ### Test OCSP Request
