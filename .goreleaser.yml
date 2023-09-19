@@ -10,6 +10,8 @@ builds:
     goarch:
       - amd64
       - arm64
+release:
+  draft: true
 archives:
   - format: zip
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
