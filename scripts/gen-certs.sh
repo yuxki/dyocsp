@@ -83,7 +83,7 @@ sign_ocsp_responder_by_root_ca() {
     -in "${ROOT_CA_HOME}/root-ocsp.csr" \
     -out "${ROOT_CA_HOME}/root-ocsp.crt" \
     -extensions ocsp_ext \
-    -days 30
+    -days 36500
 }
 
 sign_ocsp_responder_by_sub_ca() {
@@ -102,7 +102,7 @@ sign_ocsp_responder_by_sub_ca() {
     -in "${SUB_CA_HOME}/sub-ocsp.csr" \
     -out "${SUB_CA_HOME}/sub-ocsp.crt" \
     -extensions ocsp_ext \
-    -days 30
+    -days 36500
 }
 
 extra_ecparam_sign_ocsp_responder_by_sub_ca() {
@@ -123,7 +123,7 @@ extra_ecparam_sign_ocsp_responder_by_sub_ca() {
     -in "${SUB_CA_HOME}/sub-ocsp-ecparam.csr" \
     -out "${SUB_CA_HOME}/sub-ocsp-ecparam.crt" \
     -extensions ocsp_ext \
-    -days 30
+    -days 36500
 }
 
 extra_sign_expired_ocsp_responder_by_sub_ca() {
@@ -238,7 +238,7 @@ extra_sign_self_sub_ca_with_ecparam() {
     -key "${SUB_CA_HOME}/private/self-ecparam.key" \
     -out "${SUB_CA_HOME}/self-ecparam.crt" \
     -subj '/CN=localhost' \
-    -days 3650
+    -days 36500
 }
 
 main() {
