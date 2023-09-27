@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/yuxki/dyocsp/pkg/date"
 	"github.com/yuxki/dyocsp/pkg/db"
 	"golang.org/x/crypto/ocsp"
 )
@@ -14,7 +15,7 @@ func TestNewResponseCacheStore(t *testing.T) {
 	t.Parallel()
 
 	cacheStore := NewResponseCacheStore()
-	now := time.Now().UTC()
+	now := date.NowGMT()
 	if cacheStore.UpdatedAt.Compare(now) == 1 {
 		t.Errorf("UpdateAt is later than Now(%#v): %#v", now, cacheStore.UpdatedAt)
 	}
@@ -185,7 +186,7 @@ func TestResponseCacheStore_Update_Get_Delete(t *testing.T) {
 			}
 
 			preAtUpdate := cacheStore.UpdatedAt
-			time.Sleep(time.Millisecond * 50)
+			cacheStore.now = func() time.Time { return time.Date(2033, 8, 9, 12, 30, 0, 0, time.UTC) }
 
 			// Update cache store
 			invalds := cacheStore.Update(d.caches)
@@ -196,7 +197,7 @@ func TestResponseCacheStore_Update_Get_Delete(t *testing.T) {
 				t.Errorf("UpdateAt is later than previous updation(%#v): %#v", preAtUpdate, cacheStore.UpdatedAt)
 			}
 
-			time.Sleep(time.Millisecond * 50)
+			cacheStore.now = func() time.Time { return time.Date(2033, 8, 9, 12, 30, 1, 0, time.UTC) }
 
 			// Get a cache from cache store
 			gotCache, ok := cacheStore.Get(serialGetNumber)
@@ -211,7 +212,7 @@ func TestResponseCacheStore_Update_Get_Delete(t *testing.T) {
 			}
 
 			preAtUpdate = cacheStore.UpdatedAt
-			time.Sleep(time.Millisecond * 50)
+			cacheStore.now = func() time.Time { return time.Date(2033, 8, 9, 12, 30, 2, 0, time.UTC) }
 
 			// Truncate cache store
 			_ = cacheStore.Truncate()

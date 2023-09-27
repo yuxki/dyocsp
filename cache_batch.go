@@ -8,6 +8,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/yuxki/dyocsp/pkg/cache"
+	"github.com/yuxki/dyocsp/pkg/date"
 	"github.com/yuxki/dyocsp/pkg/db"
 )
 
@@ -63,6 +64,7 @@ type CacheBatch struct {
 	cacheStore  *cache.ResponseCacheStore
 	caDBClient  db.CADBClient
 	responder   *Responder
+	now         date.Now
 	nextUpdate  time.Time
 	spec        CacheBatchSpec
 	quite       chan string
@@ -96,6 +98,7 @@ func NewCacheBatch(
 		cacheStore:  cacheStore,
 		caDBClient:  caDBClient,
 		responder:   responder,
+		now:         date.NowGMT,
 		nextUpdate:  nextUpdate,
 		spec:        spec,
 		batchSerial: 0,
@@ -159,7 +162,8 @@ func (c *CacheBatch) RunOnce(ctx context.Context) []cache.ResponseCache {
 		}
 
 		if expCtl != nil {
-			entries = expCtl.Do(time.Now().UTC(), entries)
+			// When certificate after date is past, response cache is not created.
+			entries = expCtl.Do(c.now(), entries)
 		}
 	}
 	logger.Debug().Msgf("List of exchange entries from scanned entries: %v", entries)
@@ -258,7 +262,7 @@ func (c *CacheBatch) waitForNextUpdate(ctx context.Context, waitDur time.Duratio
 //   - Wait for next update.
 func (c *CacheBatch) Run(ctx context.Context) {
 	for {
-		startTime := time.Now().UTC()
+		startTime := c.now()
 
 		logger := c.spec.Logger.With().Int("batch_serial", c.batchSerial).Logger()
 		logger.Info().Msg("Starting cache generation batch.")
@@ -277,7 +281,7 @@ func (c *CacheBatch) Run(ctx context.Context) {
 		// Summury of this loop batch
 		c.logBatchSummary(ctx, startTime)
 
-		waitDur := c.syncWithWaitDuration(time.Now().UTC())
+		waitDur := c.syncWithWaitDuration(c.now())
 
 		// Update nextUpdate
 		c.nextUpdate = c.nextUpdate.Add(c.spec.Interval)

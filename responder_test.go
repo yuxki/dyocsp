@@ -146,7 +146,9 @@ func TestBuildResponder(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			responder, err := BuildResponder(rCertFilePem, rPrivKeyPem, issuerCertPem)
+			responder, err := BuildResponder(
+				rCertFilePem, rPrivKeyPem, issuerCertPem, time.Date(2024, 8, 9, 12, 30, 0, 0, time.UTC),
+			)
 
 			if d.errMsg == "" {
 				if err != nil {
@@ -230,7 +232,9 @@ func TestBuildResponder_IssuerKeyNameHashes(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			responder, err := BuildResponder(rCertFilePem, rPrivKeyPem, issuerCertPem)
+			responder, err := BuildResponder(
+				rCertFilePem, rPrivKeyPem, issuerCertPem, time.Date(2024, 8, 9, 12, 30, 0, 0, time.UTC),
+			)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -272,7 +276,9 @@ func testCreateDirectResponder(t *testing.T) *Responder {
 		t.Fatal(err)
 	}
 
-	responder, err := BuildResponder(rCertFilePem, rPrivKeyPem, issuerCertPem)
+	responder, err := BuildResponder(
+		rCertFilePem, rPrivKeyPem, issuerCertPem, time.Date(2024, 8, 9, 12, 30, 0, 0, time.UTC),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -298,7 +304,9 @@ func testCreateDelegatedResponder(t *testing.T) *Responder {
 		t.Fatal(err)
 	}
 
-	responder, err := BuildResponder(rCertFilePem, rPrivKeyPem, issuerCertPem)
+	responder, err := BuildResponder(
+		rCertFilePem, rPrivKeyPem, issuerCertPem, time.Date(2024, 8, 9, 12, 30, 0, 0, time.UTC),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}

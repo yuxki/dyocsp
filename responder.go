@@ -181,7 +181,7 @@ func detectAuthType(cert *x509.Certificate) AuthorizedType {
 // formats. It takes a PEM format responder certificate, a PKCS#8 encoded PEM format
 // responder private key, and a PEM format issuer certificate as input. It then creates and
 // returns a new dyocsp.Responder instance.
-func BuildResponder(rCertPem, rPrivKeyPem, issuerCertPem []byte) (*Responder, error) {
+func BuildResponder(rCertPem, rPrivKeyPem, issuerCertPem []byte, nowT time.Time) (*Responder, error) {
 	// Parse Responder Certificate
 	rCertblock, _ := pem.Decode(rCertPem)
 	rCert, err := x509.ParseCertificate(rCertblock.Bytes)
@@ -235,7 +235,7 @@ func BuildResponder(rCertPem, rPrivKeyPem, issuerCertPem []byte) (*Responder, er
 		AuthType:       authType,
 	}
 
-	if err := responder.Verify(); err != nil {
+	if err := responder.Verify(nowT); err != nil {
 		return nil, err
 	}
 
@@ -274,16 +274,16 @@ func (r *Responder) verifyIssuerSignedResponder() error {
 	return nil
 }
 
-func (r *Responder) verifyNotExpired() error {
-	if r.rCert.NotAfter.Compare(time.Now().UTC()) < 0 {
+func (r *Responder) verifyNotExpired(nowT time.Time) error {
+	if r.rCert.NotAfter.Compare(nowT) < 0 {
 		return invalidPKIResourceError{responderCert, "date of Not After is past."}
 	}
 
 	return nil
 }
 
-func (r *Responder) verifyRCertBeforeDateNotFuture() error {
-	if time.Now().UTC().Compare(r.rCert.NotBefore) < 0 {
+func (r *Responder) verifyRCertBeforeDateNotFuture(nowT time.Time) error {
+	if nowT.Compare(r.rCert.NotBefore) < 0 {
 		return invalidPKIResourceError{responderCert, "date of Not Before is future."}
 	}
 
@@ -346,7 +346,7 @@ func (r *Responder) verifyRKeyECDSAPairValid() error {
 }
 
 // Verify that the responder has valid certificates and a private key.
-func (r *Responder) Verify() error {
+func (r *Responder) Verify(nowT time.Time) error {
 	err := r.verifyDesignedOCSPSigning()
 	if err != nil {
 		return err
@@ -357,12 +357,12 @@ func (r *Responder) Verify() error {
 		return err
 	}
 
-	err = r.verifyNotExpired()
+	err = r.verifyNotExpired(nowT)
 	if err != nil {
 		return err
 	}
 
-	err = r.verifyRCertBeforeDateNotFuture()
+	err = r.verifyRCertBeforeDateNotFuture(nowT)
 	if err != nil {
 		return err
 	}

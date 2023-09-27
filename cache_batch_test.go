@@ -8,6 +8,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/yuxki/dyocsp/pkg/cache"
+	"github.com/yuxki/dyocsp/pkg/date"
 	"github.com/yuxki/dyocsp/pkg/db"
 )
 
@@ -87,7 +88,7 @@ func TestCacheBatch_Run_DBNotChanged(t *testing.T) {
 		store,
 		client,
 		responder,
-		time.Now().UTC(),
+		date.NowGMT(),
 		spec,
 	)
 
@@ -133,7 +134,7 @@ func TestCacheBatch_Run_DBChanged(t *testing.T) {
 		store,
 		client,
 		responder,
-		time.Now().UTC(),
+		date.NowGMT(),
 		spec,
 	)
 
@@ -186,7 +187,7 @@ func TestCacheBatch_Run_DelegatedResponder(t *testing.T) {
 		store,
 		client,
 		responder,
-		time.Now().UTC(),
+		date.NowGMT(),
 		spec,
 	)
 
@@ -229,7 +230,7 @@ func TestCacheBatch_Run_DirectResponder(t *testing.T) {
 		store,
 		client,
 		responder,
-		time.Now().UTC(),
+		date.NowGMT(),
 		spec,
 	)
 

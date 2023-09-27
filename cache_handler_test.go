@@ -15,6 +15,7 @@ import (
 	"github.com/justinas/alice"
 	"github.com/rs/zerolog/log"
 	"github.com/yuxki/dyocsp/pkg/cache"
+	"github.com/yuxki/dyocsp/pkg/date"
 	"github.com/yuxki/dyocsp/pkg/db"
 	"golang.org/x/crypto/ocsp"
 )
@@ -211,7 +212,7 @@ func testCreateDummyCache(
 	entry.RevDate = time.Time{}
 	entry.CRLReason = db.NotRevoked
 
-	thisUpdate := time.Now().UTC()
+	thisUpdate := date.NowGMT()
 
 	resCache, _ := cache.CreatePreSignedResponseCache(entry, thisUpdate, time.Second*time.Duration(interval))
 	resCache, _ = responder.SignCacheResponse(resCache)

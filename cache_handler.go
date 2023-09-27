@@ -11,6 +11,7 @@ import (
 	"github.com/justinas/alice"
 	"github.com/rs/zerolog"
 	"github.com/yuxki/dyocsp/pkg/cache"
+	"github.com/yuxki/dyocsp/pkg/date"
 	"github.com/yuxki/dyocsp/pkg/db"
 	"golang.org/x/crypto/ocsp"
 )
@@ -60,6 +61,7 @@ type CacheHandler struct {
 	cacheStore *cache.ResponseCacheStoreRO
 	responder  *Responder
 	spec       CacheHandlerSpec
+	now        date.Now
 }
 
 // NewCacheHandler creates a new instance of dyocsp.CacheHandler.
@@ -81,6 +83,7 @@ func NewCacheHandler(
 		cacheStore: cacheStore,
 		responder:  responder,
 		spec:       spec,
+		now:        date.NowGMT,
 	})
 }
 
@@ -109,10 +112,10 @@ func verifyIssuer(req *ocsp.Request, responder *Responder) error {
 	return nil
 }
 
-func addSuccessOCSPResHeader(w http.ResponseWriter, cache *cache.ResponseCache, now time.Time, cacheCtlMaxAge int) {
+func addSuccessOCSPResHeader(w http.ResponseWriter, cache *cache.ResponseCache, nowT time.Time, cacheCtlMaxAge int) {
 	// Configured max-age cannot be over nextUpdate
 	maxAge := cacheCtlMaxAge
-	durToNext := cache.GetTemplate().NextUpdate.Sub(now)
+	durToNext := cache.GetTemplate().NextUpdate.Sub(nowT)
 	if durToNext < time.Second*time.Duration(cacheCtlMaxAge) {
 		maxAge = int(durToNext / time.Second)
 	}
@@ -120,7 +123,7 @@ func addSuccessOCSPResHeader(w http.ResponseWriter, cache *cache.ResponseCache, 
 	w.Header().Add("Cache-Control", fmt.Sprintf("max-age=%d, public, no-transform, must-revalidate", maxAge))
 	w.Header().Add("Last-Modified", cache.GetTemplate().ProducedAt.Format(http.TimeFormat))
 	w.Header().Add("Expires", cache.GetTemplate().NextUpdate.Format(http.TimeFormat))
-	w.Header().Add("Date", time.Now().UTC().Format(http.TimeFormat))
+	w.Header().Add("Date", nowT.Format(http.TimeFormat))
 	w.Header().Add("ETag", cache.SHA1HashHexString())
 }
 
@@ -179,8 +182,8 @@ func (c CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	now := time.Now().UTC()
-	if cmp := now.Compare(cache.GetTemplate().NextUpdate); cmp > 0 {
+	nowT := c.now()
+	if cmp := nowT.Compare(cache.GetTemplate().NextUpdate); cmp > 0 {
 		logger.Error().Msgf("nextUpdate of found cache is set in the past.")
 		_, err = w.Write(ocsp.UnauthorizedErrorResponse)
 		if err != nil {
@@ -189,7 +192,7 @@ func (c CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	addSuccessOCSPResHeader(w, cache, now, c.spec.MaxAge)
+	addSuccessOCSPResHeader(w, cache, nowT, c.spec.MaxAge)
 	_, err = cache.Write(w)
 	if err != nil {
 		logger.Error().Err(err).Msg("")
