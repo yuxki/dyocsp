@@ -111,13 +111,13 @@ func CreatePreSignedResponseCache(
 	}, nil
 }
 
-// GetTemplate returns a CertificateEntry object.
-func (r *ResponseCache) GetEntry() db.CertificateEntry {
+// Entry returns a CertificateEntry object.
+func (r *ResponseCache) Entry() db.CertificateEntry {
 	return r.entry
 }
 
-// GetTemplate returns the ocsp.Response as template of signed response.
-func (r *ResponseCache) GetTemplate() ocsp.Response {
+// Template returns the ocsp.Response as template of signed response.
+func (r *ResponseCache) Template() ocsp.Response {
 	return r.template
 }
 
@@ -144,8 +144,8 @@ func (r *ResponseCache) SetResponse(response []byte) (*ResponseCache, error) {
 	return r, nil
 }
 
-// GetResponse returns a copy of the signed response cache.
-func (r *ResponseCache) GetResponse() []byte {
+// Response returns a copy of the signed response cache.
+func (r *ResponseCache) Response() []byte {
 	if r.response == nil {
 		return nil
 	}
@@ -154,8 +154,8 @@ func (r *ResponseCache) GetResponse() []byte {
 	return res
 }
 
-// GetSHA1Hash returns the copy of the SHA1 hash of the OCSP response.
-func (r *ResponseCache) GetSHA1Hash() []byte {
+// SHA1Hash returns the copy of the SHA1 hash of the OCSP response.
+func (r *ResponseCache) SHA1Hash() []byte {
 	if r.sha1Hash == nil {
 		return nil
 	}

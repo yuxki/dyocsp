@@ -115,14 +115,14 @@ func verifyIssuer(req *ocsp.Request, responder *Responder) error {
 func addSuccessOCSPResHeader(w http.ResponseWriter, cache *cache.ResponseCache, nowT time.Time, cacheCtlMaxAge int) {
 	// Configured max-age cannot be over nextUpdate
 	maxAge := cacheCtlMaxAge
-	durToNext := cache.GetTemplate().NextUpdate.Sub(nowT)
+	durToNext := cache.Template().NextUpdate.Sub(nowT)
 	if durToNext < time.Second*time.Duration(cacheCtlMaxAge) {
 		maxAge = int(durToNext / time.Second)
 	}
 
 	w.Header().Add("Cache-Control", fmt.Sprintf("max-age=%d, public, no-transform, must-revalidate", maxAge))
-	w.Header().Add("Last-Modified", cache.GetTemplate().ProducedAt.Format(http.TimeFormat))
-	w.Header().Add("Expires", cache.GetTemplate().NextUpdate.Format(http.TimeFormat))
+	w.Header().Add("Last-Modified", cache.Template().ProducedAt.Format(http.TimeFormat))
+	w.Header().Add("Expires", cache.Template().NextUpdate.Format(http.TimeFormat))
 	w.Header().Add("Date", nowT.Format(http.TimeFormat))
 	w.Header().Add("ETag", cache.SHA1HashHexString())
 }
@@ -183,7 +183,7 @@ func (c CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	nowT := c.now()
-	if cmp := nowT.Compare(cache.GetTemplate().NextUpdate); cmp > 0 {
+	if cmp := nowT.Compare(cache.Template().NextUpdate); cmp > 0 {
 		logger.Error().Msgf("nextUpdate of found cache is set in the past.")
 		_, err = w.Write(ocsp.UnauthorizedErrorResponse)
 		if err != nil {

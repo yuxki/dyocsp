@@ -404,7 +404,7 @@ func (r *Responder) SignCacheResponse(cache cache.ResponseCache) (cache.Response
 		}
 	}
 
-	res, err := ocsp.CreateResponse(r.issuerCert, r.rCert, cache.GetTemplate(), priv)
+	res, err := ocsp.CreateResponse(r.issuerCert, r.rCert, cache.Template(), priv)
 	if err != nil {
 		return cache, err
 	}

@@ -298,7 +298,7 @@ func testHTTPResContent(t *testing.T, responder *Responder, res *http.Response, 
 		t.Fatal(err)
 	}
 
-	if ocspRes.SerialNumber.Cmp(cache.GetTemplate().SerialNumber) != 0 {
+	if ocspRes.SerialNumber.Cmp(cache.Template().SerialNumber) != 0 {
 		t.Fatal("Cached response is not match with requested response")
 	}
 }
@@ -350,7 +350,7 @@ func TestCacheHandler_ServeHTTP_ResponseSuccess(t *testing.T) {
 	res := testHandler(t, "8090", handler, responder)
 	defer res.Body.Close()
 
-	template := resCache.GetTemplate()
+	template := resCache.Template()
 	testHTTPResHeader(t, res.Header, &template)
 	testHTTPResContent(t, responder, res, resCache)
 }

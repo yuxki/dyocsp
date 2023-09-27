@@ -386,34 +386,34 @@ func TestResponder_SignCacheResponse(t *testing.T) {
 				return
 			}
 
-			res, err := ocsp.ParseResponse(resCache.GetResponse(), responder.rCert)
+			res, err := ocsp.ParseResponse(resCache.Response(), responder.rCert)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			if len(resCache.GetSHA1Hash()) != 20 {
+			if len(resCache.SHA1Hash()) != 20 {
 				t.Errorf(
-					"resCache.sha1Hash is not may not be a SHA1 hash of the OCSPResponse: %#v", resCache.GetSHA1Hash())
+					"resCache.sha1Hash is not may not be a SHA1 hash of the OCSPResponse: %#v", resCache.SHA1Hash())
 			}
 
-			if res.Status != resCache.GetTemplate().Status {
-				t.Errorf("State %#v is changed: %#v", resCache.GetTemplate().Status, res.Status)
+			if res.Status != resCache.Template().Status {
+				t.Errorf("State %#v is changed: %#v", resCache.Template().Status, res.Status)
 			}
 
-			if !reflect.DeepEqual(res.SerialNumber, resCache.GetTemplate().SerialNumber) {
-				t.Errorf("State %#v is changed: %#v", resCache.GetTemplate().SerialNumber, res.SerialNumber)
+			if !reflect.DeepEqual(res.SerialNumber, resCache.Template().SerialNumber) {
+				t.Errorf("State %#v is changed: %#v", resCache.Template().SerialNumber, res.SerialNumber)
 			}
 
-			if !reflect.DeepEqual(res.ThisUpdate, resCache.GetTemplate().ThisUpdate) {
-				t.Errorf("State %#v is changed: %#v", resCache.GetTemplate().ThisUpdate, res.ThisUpdate)
+			if !reflect.DeepEqual(res.ThisUpdate, resCache.Template().ThisUpdate) {
+				t.Errorf("State %#v is changed: %#v", resCache.Template().ThisUpdate, res.ThisUpdate)
 			}
 
-			if !reflect.DeepEqual(res.NextUpdate, resCache.GetTemplate().NextUpdate) {
-				t.Errorf("State %#v is changed: %#v", resCache.GetTemplate().NextUpdate, res.NextUpdate)
+			if !reflect.DeepEqual(res.NextUpdate, resCache.Template().NextUpdate) {
+				t.Errorf("State %#v is changed: %#v", resCache.Template().NextUpdate, res.NextUpdate)
 			}
 
-			if !reflect.DeepEqual(res.RevocationReason, resCache.GetTemplate().RevocationReason) {
-				t.Errorf("State %#v is changed: %#v", resCache.GetTemplate().RevocationReason, res.RevocationReason)
+			if !reflect.DeepEqual(res.RevocationReason, resCache.Template().RevocationReason) {
+				t.Errorf("State %#v is changed: %#v", resCache.Template().RevocationReason, res.RevocationReason)
 			}
 		})
 	}

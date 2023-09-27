@@ -274,7 +274,7 @@ func (c *CacheBatch) Run(ctx context.Context) {
 		// Update cache store
 		invs := c.cacheStore.Update(caches)
 		for _, inv := range invs {
-			logger.Error().Msgf("Invalid response cache: %s", inv.GetEntry().Serial)
+			logger.Error().Msgf("Invalid response cache: %s", inv.Entry().Serial)
 		}
 		logger.Info().Msg("Response cache updated.")
 
