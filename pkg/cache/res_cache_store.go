@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/yuxki/dyocsp/pkg/date"
 	"github.com/yuxki/dyocsp/pkg/db"
 )
 
@@ -15,15 +16,17 @@ import (
 // the cache's update time.
 type ResponseCacheStore struct {
 	cacheMap  map[string]ResponseCache
+	now       date.Now
 	UpdatedAt time.Time
 }
 
 // NewResponseCacheStore creates and retruns new instance of ResponseCacheStore.
 func NewResponseCacheStore() *ResponseCacheStore {
 	cacheMap := make(map[string]ResponseCache, 0)
-	updatedAt := time.Now().UTC()
+	updatedAt := date.NowGMT()
 	return &ResponseCacheStore{
 		cacheMap:  cacheMap,
+		now:       date.NowGMT,
 		UpdatedAt: updatedAt,
 	}
 }
@@ -41,7 +44,7 @@ func cacheMapKey(s *big.Int) (string, bool) {
 // ocsp response and returns the duplicated serial numbers when they exist.
 func (r *ResponseCacheStore) Update(caches []ResponseCache) []ResponseCache {
 	defer func() {
-		r.UpdatedAt = time.Now().UTC()
+		r.UpdatedAt = r.now()
 	}()
 
 	invalids := make([]ResponseCache, 0, len(caches))

@@ -19,6 +19,7 @@ import (
 	"github.com/yuxki/dyocsp"
 	"github.com/yuxki/dyocsp/pkg/cache"
 	"github.com/yuxki/dyocsp/pkg/config"
+	"github.com/yuxki/dyocsp/pkg/date"
 	"github.com/yuxki/dyocsp/pkg/db"
 	"gopkg.in/yaml.v3"
 )
@@ -49,7 +50,7 @@ func newResponder(cfg config.DyOCSPConfig) *dyocsp.Responder {
 		stdlog.Fatalf("error:issuer certificate: %v", err)
 	}
 
-	responder, err := dyocsp.BuildResponder(certPem, keyPem, issuerCertPem)
+	responder, err := dyocsp.BuildResponder(certPem, keyPem, issuerCertPem, date.NowGMT())
 	if err != nil {
 		stdlog.Fatal(err.Error())
 	}
@@ -166,7 +167,7 @@ func run(cfg config.DyOCSPConfig, responder *dyocsp.Responder) {
 		cacheStore,
 		dbClient,
 		responder,
-		time.Now().UTC(),
+		date.NowGMT(),
 		bSpec,
 		dyocsp.WithQuiteChan(quite),
 	)
