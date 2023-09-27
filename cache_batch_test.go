@@ -97,10 +97,10 @@ func TestCacheBatch_Run_DBNotChanged(t *testing.T) {
 
 	cache := testGetCache(t, targetSerialStr, store)
 
-	if cache.GetEntry().Serial.Cmp(targetSerial) != 0 {
+	if cache.Entry().Serial.Cmp(targetSerial) != 0 {
 		t.Fatalf("Expected serial is %s but got %s.",
-			cache.GetEntry().Serial.Text(db.SerialBase),
-			cache.GetEntry().Serial.Text(db.SerialBase))
+			cache.Entry().Serial.Text(db.SerialBase),
+			cache.Entry().Serial.Text(db.SerialBase))
 	}
 }
 
@@ -153,8 +153,8 @@ func TestCacheBatch_Run_DBChanged(t *testing.T) {
 	// Do Assertion
 	cache := testGetCache(t, targetSerial, store)
 
-	if string(cache.GetEntry().RevType) != wantType {
-		t.Fatalf("Expected rev type is %s but got %s.", wantType, string(cache.GetEntry().RevType))
+	if string(cache.Entry().RevType) != wantType {
+		t.Fatalf("Expected rev type is %s but got %s.", wantType, string(cache.Entry().RevType))
 	}
 }
 
@@ -196,7 +196,7 @@ func TestCacheBatch_Run_DelegatedResponder(t *testing.T) {
 
 	cache := testGetCache(t, targetSerialStr, store)
 
-	if cache.GetTemplate().Certificate == nil {
+	if cache.Template().Certificate == nil {
 		t.Fatal("Delegated signing responder may contain itself certificate.")
 	}
 }
@@ -239,7 +239,7 @@ func TestCacheBatch_Run_DirectResponder(t *testing.T) {
 
 	cache := testGetCache(t, targetSerialStr, store)
 
-	if cache.GetTemplate().Certificate != nil {
+	if cache.Template().Certificate != nil {
 		t.Fatalf("Direct signing responder may not contain itself certificate.")
 	}
 }

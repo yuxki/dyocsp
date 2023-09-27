@@ -59,7 +59,7 @@ func (r *ResponseCacheStore) Update(caches []ResponseCache) []ResponseCache {
 
 	for _, cache := range caches {
 		// Check if it is possible to retrieve the serial number
-		key, ok := cacheMapKey(cache.GetTemplate().SerialNumber)
+		key, ok := cacheMapKey(cache.Template().SerialNumber)
 		if !ok {
 			invalids = append(invalids, cache)
 			continue
@@ -80,7 +80,7 @@ func (r *ResponseCacheStore) Update(caches []ResponseCache) []ResponseCache {
 		}
 
 		// Check if the OCSP response exists
-		if res := cache.GetResponse(); res == nil {
+		if res := cache.Response(); res == nil {
 			invalids = append(invalids, cache)
 			continue
 		}
