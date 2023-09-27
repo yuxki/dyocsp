@@ -197,7 +197,7 @@ func TestBuildResponder_IssuerKeyNameHashes(t *testing.T) {
 			"sub-ocsp-rsa.crt",
 			"sub-ocsp-rsa-pkcs8.key",
 			"sub-ca-rsa.crt",
-			[]byte{97, 19, 238, 122, 73, 234, 121, 182, 37, 205, 190, 121, 135, 219, 225, 243, 93, 3, 165, 63},
+			[]byte{0xe9, 0x61, 0xfd, 0x3d, 0x66, 0x22, 0xec, 0x5e, 0x5a, 0xe7, 0xc9, 0x52, 0x61, 0xc4, 0xaf, 0x8c, 0x6d, 0x66, 0x70, 0x5d},
 			[]byte{19, 227, 235, 142, 71, 110, 197, 189, 239, 55, 92, 120, 139, 166, 80, 251, 251, 72, 70, 129},
 		},
 		{
@@ -205,7 +205,7 @@ func TestBuildResponder_IssuerKeyNameHashes(t *testing.T) {
 			"self-ecparam.crt",
 			"self-ecparam.key",
 			"self-ecparam.crt",
-			[]byte{248, 240, 34, 253, 219, 127, 39, 229, 200, 38, 41, 104, 206, 161, 194, 13, 145, 235, 183, 155},
+			[]byte{0xeb, 0xb9, 0xa8, 0x8d, 0x29, 0xf4, 0x52, 0x57, 0xde, 0x5d, 0x6, 0xea, 0x3d, 0xe4, 0x58, 0x6b, 0x31, 0xa9, 0xf5, 0x56},
 			[]byte{43, 136, 163, 228, 65, 65, 77, 120, 171, 90, 36, 51, 134, 91, 254, 179, 168, 144, 173, 161},
 		},
 	}
