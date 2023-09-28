@@ -87,7 +87,8 @@ var ErrDelayExceedsInterval = errors.New("delay must be less than interval or eq
 type CacheBatchOption func(*CacheBatch)
 
 // WithIntervalSec sets interval seconds option. Interval is the duration specification
-// between the Next Update and the Next Update. If zero is set, DefaultInterval is used.
+// between the Next Update and the Next Update. If 0 or less than 0 is set, DefaultInterval
+// is used.
 func WithIntervalSec(sec int) func(*CacheBatch) {
 	return func(c *CacheBatch) {
 		c.intervalSec = sec
@@ -96,7 +97,8 @@ func WithIntervalSec(sec int) func(*CacheBatch) {
 
 // WithDelay sets delay option. Delay is a duration specification that pauses
 // the execution of the program for a specified CacheBatchSpec.Interval before
-// continuing to process further. Default value is 0 duraiton.
+// continuing to process further. Default value is 0 and. If value is less than 0,
+// default value is used.
 func WithDelay(delay time.Duration) func(*CacheBatch) {
 	return func(c *CacheBatch) {
 		c.delay = delay
@@ -159,18 +161,22 @@ func NewCacheBatch(
 		opt(batch)
 	}
 
-	if batch.intervalSec == 0 {
+	if batch.intervalSec <= 0 {
 		batch.interval = time.Second * DefaultInterval
 	} else {
 		batch.interval = time.Second * time.Duration(batch.intervalSec)
 	}
 
-	if batch.logger == nil {
-		batch.logger = &log.Logger
+	if batch.delay < 0 {
+		batch.delay = 0
 	}
 
 	if batch.delay > batch.interval {
 		return nil, ErrDelayExceedsInterval
+	}
+
+	if batch.logger == nil {
+		batch.logger = &log.Logger
 	}
 
 	return batch, nil
