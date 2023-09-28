@@ -45,23 +45,6 @@ func createExpirationLogger(expiration expBehavior, logger zerolog.Logger) *db.E
 	return expCtl
 }
 
-// CacheBatchSpec is a required cache batch specificatios.
-type CacheBatchSpec struct {
-	// Interval is the duration specification between the Next Update and the Next Update.
-	Interval time.Duration
-	// Delay is a duration specification that pauses the execution of the program
-	// for a specified CacheBatchSpec.Interval before continuing to process further.
-	Delay time.Duration
-	// Logger is specified zerolog.Logger.
-	Logger zerolog.Logger
-	// The strict specification of dyocsp.CacheBatch means that it is in 'strict mode',
-	// which calls panic() when a CADBClient error occurs during the scanning of the
-	// database.
-	Strict bool
-	// Expiration determines the behavior when the Expiration Date is exceeded.
-	Expiration string
-}
-
 // The CacheBatch function scans the CA database for certificates with revocation
 // information and generates response caches. It then updates the dyocsp.ResponseCacheStore
 // with these caches. The job is repeated infinitely with an interval between each job. The

@@ -171,18 +171,19 @@ func run(cfg config.DyOCSPConfig, responder *dyocsp.Responder) {
 
 	// Create Server
 	hLogger := log.Logger.With().Str("role", CacheHandlerRole).Logger()
-	hSpec := dyocsp.CacheHandlerSpec{
-		MaxRequestBytes: cfg.MaxRequestBytes,
-		MaxAge:          cfg.CacheControlMaxAge,
-		Logger:          hLogger,
-	}
-
 	cacheStoreRO := cacheStore.NewReadOnlyCacheStore()
 
 	chain := alice.New()
 	chain = chain.Append(hlog.NewHandler(hLogger))
 	chain = chainHTTPAccessHandler(chain)
-	cacheHander := dyocsp.NewCacheHandler(cacheStoreRO, responder, hSpec, chain)
+	cacheHander := dyocsp.NewCacheHandler(
+		cacheStoreRO,
+		responder,
+		chain,
+		dyocsp.WithMaxAge(cfg.CacheControlMaxAge),
+		dyocsp.WithMaxRequestBytes(cfg.MaxRequestBytes),
+		dyocsp.WithHandlerLogger(&hLogger),
+	)
 
 	host := net.JoinHostPort(cfg.Domain, cfg.Port)
 	server := dyocsp.CreateHTTPServer(
