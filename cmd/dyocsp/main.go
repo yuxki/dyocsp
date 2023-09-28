@@ -148,21 +148,23 @@ func run(cfg config.DyOCSPConfig, responder *dyocsp.Responder) {
 	// Create CacheBatch
 	quite := make(chan string)
 
-	bSpec := dyocsp.CacheBatchSpec{
-		Interval: time.Second * time.Duration(cfg.Interval),
-		Delay:    time.Second * time.Duration(cfg.Delay),
-		Logger:   log.Logger.With().Str("role", cacheBatchRole).Logger(),
-		Strict:   cfg.Strict,
-	}
-	batch := dyocsp.NewCacheBatch(
+	blogger := log.Logger.With().Str("role", cacheBatchRole).Logger()
+	batch, err := dyocsp.NewCacheBatch(
 		cfg.CA,
 		cacheStore,
 		dbClient,
 		responder,
 		date.NowGMT(),
-		bSpec,
+		// bSpec,
+		dyocsp.WithIntervalSec(cfg.Interval),
+		dyocsp.WithDelay(time.Second*time.Duration(cfg.Delay)),
+		dyocsp.WithStrict(cfg.Strict),
+		dyocsp.WithLogger(&blogger),
 		dyocsp.WithQuiteChan(quite),
 	)
+	if err != nil {
+		panic(err)
+	}
 
 	// Run batch generating caches
 	go batch.Run(rootCtx)
@@ -190,7 +192,7 @@ func run(cfg config.DyOCSPConfig, responder *dyocsp.Responder) {
 	)
 
 	// Run Server
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil {
 		if errors.Is(err, http.ErrServerClosed) {
 			panic(err)
