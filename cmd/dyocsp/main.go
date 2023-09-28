@@ -99,7 +99,7 @@ func newDynamoDBClient(cfg config.DyOCSPConfig) db.DynamoDBClient {
 	return db.NewDynamoDBClient(client, &ca, &caTable, &caGsi, cfg.DynamoDBTimeout)
 }
 
-func newCADBClientFromConfig(cfg config.DyOCSPConfig) (db.CADBClient, error) {
+func newCADBClientFromConfig(cfg config.DyOCSPConfig) (dyocsp.CADBClient, error) {
 	switch cfg.DBType {
 	case config.FileDBType:
 		return newFileDBClient(cfg), nil
