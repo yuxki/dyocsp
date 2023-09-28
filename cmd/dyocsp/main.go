@@ -99,20 +99,6 @@ func newDynamoDBClient(cfg config.DyOCSPConfig) db.DynamoDBClient {
 	return db.NewDynamoDBClient(client, &ca, &caTable, &caGsi, cfg.DynamoDBTimeout)
 }
 
-func newCADBClientFromConfig(cfg config.DyOCSPConfig) (dyocsp.CADBClient, error) {
-	switch cfg.DBType {
-	case config.FileDBType:
-		return newFileDBClient(cfg), nil
-	case config.DynamoDBType:
-		return newDynamoDBClient(cfg), nil
-	}
-
-	err := config.MissingParameterError{}
-	err.Param = "db.<db-type>"
-
-	return nil, err
-}
-
 func printUsage() {
 	stdlog.Println("Usage: dyocsp -c CONFIG_FILE")
 }
@@ -145,9 +131,15 @@ func run(cfg config.DyOCSPConfig, responder *dyocsp.Responder) {
 	defer cancel()
 
 	// Create DB client
-	dbClient, err := newCADBClientFromConfig(cfg)
-	if err != nil {
-		panic(err)
+	var dbClient dyocsp.CADBClient
+
+	switch cfg.DBType {
+	case config.FileDBType:
+		dbClient = newFileDBClient(cfg)
+	case config.DynamoDBType:
+		dbClient = newDynamoDBClient(cfg)
+	default:
+		panic(config.MissingParameterError{Param: "db.<db-type>"})
 	}
 
 	// Create cache store
@@ -198,7 +190,7 @@ func run(cfg config.DyOCSPConfig, responder *dyocsp.Responder) {
 	)
 
 	// Run Server
-	err = server.ListenAndServe()
+	err := server.ListenAndServe()
 	if err != nil {
 		if errors.Is(err, http.ErrServerClosed) {
 			panic(err)
