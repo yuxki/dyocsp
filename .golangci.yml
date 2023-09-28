@@ -89,6 +89,7 @@ linters:
     - nlreturn # Too Strict
     - nonamedreturns # Too Strict
     - cyclop # Use gocyclo
+    - exhaustive # Use gocyclo
 
 issues:
   exclude-rules:

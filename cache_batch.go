@@ -2,11 +2,13 @@ package dyocsp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
 	"time"
 
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/yuxki/dyocsp/pkg/cache"
 	"github.com/yuxki/dyocsp/pkg/date"
 	"github.com/yuxki/dyocsp/pkg/db"
@@ -30,34 +32,17 @@ type CADBClient interface {
 	Scan(ctx context.Context) ([]db.IntermidiateEntry, error)
 }
 
-func createExpirationLogger(expiration string, logger zerolog.Logger) *db.ExpirationControl {
+func createExpirationLogger(expiration expBehavior, logger zerolog.Logger) *db.ExpirationControl {
 	expLogger := expirationLogger{Logger: logger}
 	var expCtl *db.ExpirationControl
 	switch expiration {
-	case "warn":
+	case Warn:
 		expCtl = db.NewExpirationControl(db.WithWarnOnExpiration(), db.WithLogger(&expLogger))
-	case "invalid":
+	case Invalid:
 		expCtl = db.NewExpirationControl()
 	}
 
 	return expCtl
-}
-
-// CacheBatchSpec is a required cache batch specificatios.
-type CacheBatchSpec struct {
-	// Interval is the duration specification between the Next Update and the Next Update.
-	Interval time.Duration
-	// Delay is a duration specification that pauses the execution of the program
-	// for a specified CacheBatchSpec.Interval before continuing to process further.
-	Delay time.Duration
-	// Logger is specified zerolog.Logger.
-	Logger zerolog.Logger
-	// The strict specification of dyocsp.CacheBatch means that it is in 'strict mode',
-	// which calls panic() when a CADBClient error occurs during the scanning of the
-	// database.
-	Strict bool
-	// Expiration determines the behavior when the Expiration Date is exceeded.
-	Expiration string
 }
 
 // The CacheBatch function scans the CA database for certificates with revocation
@@ -72,15 +57,77 @@ type CacheBatch struct {
 	responder   *Responder
 	now         date.Now
 	nextUpdate  time.Time
-	spec        CacheBatchSpec
-	quite       chan string
 	batchSerial int
+	interval    time.Duration
+	// Options
+	intervalSec int
+	delay       time.Duration
+	strict      bool
+	expiration  expBehavior
+	quite       chan string
+	logger      *zerolog.Logger
 }
 
-// CacheBatchOptionFunc is type of an functional option for dyocsp.CacheBatch.
-type CacheBatchOptionFunc func(*CacheBatch)
+// Default values.
+const (
+	DefaultInterval = 60
+)
 
-// WithQuietChan is a functional option used to set a quiet message channel, which
+type expBehavior int
+
+const (
+	Ignore expBehavior = iota
+	Warn
+	Invalid
+)
+
+var ErrDelayExceedsInterval = errors.New("delay must be less than interval or equal")
+
+// CacheBatchOption is type of an functional option for dyocsp.CacheBatch.
+type CacheBatchOption func(*CacheBatch)
+
+// WithIntervalSec sets interval seconds option. Interval is the duration specification
+// between the Next Update and the Next Update. If zero is set, DefaultInterval is used.
+func WithIntervalSec(sec int) func(*CacheBatch) {
+	return func(c *CacheBatch) {
+		c.intervalSec = sec
+	}
+}
+
+// WithDelay sets delay option. Delay is a duration specification that pauses
+// the execution of the program for a specified CacheBatchSpec.Interval before
+// continuing to process further. Default value is 0 duraiton.
+func WithDelay(delay time.Duration) func(*CacheBatch) {
+	return func(c *CacheBatch) {
+		c.delay = delay
+	}
+}
+
+// WithDelay sets  strict option.// The strict specification of dyocsp.CacheBatch
+// means that it is in 'strict mode',which calls panic() when a CADBClient error
+// occurs during the scanning of the database. Default value is false.
+func WithStrict(strict bool) func(*CacheBatch) {
+	return func(c *CacheBatch) {
+		c.strict = strict
+	}
+}
+
+// WithExpiration sets expiration. This expiration determines the behavior when the
+// Expiration Date is exceeded. Default value is Ignore.
+func WithExpiration(exp expBehavior) func(*CacheBatch) {
+	return func(c *CacheBatch) {
+		c.expiration = exp
+	}
+}
+
+// WithLogger sets logger. If not set, global logger is used.
+func WithLogger(logger *zerolog.Logger) func(*CacheBatch) {
+	return func(c *CacheBatch) {
+		c.logger = logger
+	}
+}
+
+// WithQuietChan sets a quiet message channel, which
 // stops the loop of dyocsp.CacheBatch.Run(). It also sends a message immediately
 // before quieting the loop.
 func WithQuiteChan(quite chan string) func(*CacheBatch) {
@@ -96,9 +143,8 @@ func NewCacheBatch(
 	caDBClient CADBClient,
 	responder *Responder,
 	nextUpdate time.Time,
-	spec CacheBatchSpec,
-	optFuncs ...CacheBatchOptionFunc,
-) *CacheBatch {
+	opts ...CacheBatchOption,
+) (*CacheBatch, error) {
 	batch := &CacheBatch{
 		ca:          ca,
 		cacheStore:  cacheStore,
@@ -106,15 +152,28 @@ func NewCacheBatch(
 		responder:   responder,
 		now:         date.NowGMT,
 		nextUpdate:  nextUpdate,
-		spec:        spec,
 		batchSerial: 0,
 	}
 
-	for _, optF := range optFuncs {
-		optF(batch)
+	for _, opt := range opts {
+		opt(batch)
 	}
 
-	return batch
+	if batch.intervalSec == 0 {
+		batch.interval = time.Second * DefaultInterval
+	} else {
+		batch.interval = time.Second * time.Duration(batch.intervalSec)
+	}
+
+	if batch.logger == nil {
+		batch.logger = &log.Logger
+	}
+
+	if batch.delay > batch.interval {
+		return nil, ErrDelayExceedsInterval
+	}
+
+	return batch, nil
 }
 
 func (c *CacheBatch) logEntryErrors(ce db.CertificateEntry, logger *zerolog.Logger) (noError bool) {
@@ -145,7 +204,7 @@ func (c *CacheBatch) RunOnce(ctx context.Context) []cache.ResponseCache {
 	itmds, err := c.caDBClient.Scan(ctx)
 	if err != nil {
 		logger.Error().Err(err).Msg("")
-		if c.spec.Strict {
+		if c.strict {
 			panic(err)
 		}
 	}
@@ -153,7 +212,7 @@ func (c *CacheBatch) RunOnce(ctx context.Context) []cache.ResponseCache {
 	logger.Debug().Msgf("List of scanned entries from the database: %v", itmds)
 
 	// IntermidiateEntry --> CertificateEntry
-	expCtl := createExpirationLogger(c.spec.Expiration, *logger)
+	expCtl := createExpirationLogger(c.expiration, *logger)
 	exch := db.NewEntryExchange()
 	entries := make([]db.CertificateEntry, 0, len(itmds))
 	for _, itmd := range itmds {
@@ -177,7 +236,7 @@ func (c *CacheBatch) RunOnce(ctx context.Context) []cache.ResponseCache {
 	// CertificateEntry --> cache.ResponseCache(Pre-Signed)
 	resCaches := make([]cache.ResponseCache, 0, len(entries))
 	for _, entry := range entries {
-		resCache, err := cache.CreatePreSignedResponseCache(entry, c.nextUpdate, c.spec.Interval)
+		resCache, err := cache.CreatePreSignedResponseCache(entry, c.nextUpdate, c.interval)
 		if err != nil {
 			logger.Error().Err(err).Msg("")
 		}
@@ -204,17 +263,17 @@ func (c *CacheBatch) RunOnce(ctx context.Context) []cache.ResponseCache {
 }
 
 func (c *CacheBatch) syncWithWaitDuration(now time.Time) time.Duration {
-	waitDur := c.spec.Interval
+	waitDur := c.interval
 	switch r := now.Compare(c.nextUpdate); r {
 	case -1:
-		waitDur = (waitDur + c.nextUpdate.Sub(now)) - c.spec.Delay
+		waitDur = (waitDur + c.nextUpdate.Sub(now)) - c.delay
 	case 1:
-		waitDur = (waitDur - now.Sub(c.nextUpdate)) - c.spec.Delay
+		waitDur = (waitDur - now.Sub(c.nextUpdate)) - c.delay
 		if waitDur < 0 {
 			waitDur = 0
 		}
 	default:
-		waitDur -= c.spec.Delay
+		waitDur -= c.delay
 	}
 
 	return waitDur
@@ -270,7 +329,7 @@ func (c *CacheBatch) Run(ctx context.Context) {
 	for {
 		startTime := c.now()
 
-		logger := c.spec.Logger.With().Int("batch_serial", c.batchSerial).Logger()
+		logger := c.logger.With().Int("batch_serial", c.batchSerial).Logger()
 		logger.Info().Msg("Starting cache generation batch.")
 		ctx := logger.WithContext(ctx)
 
@@ -290,7 +349,7 @@ func (c *CacheBatch) Run(ctx context.Context) {
 		waitDur := c.syncWithWaitDuration(c.now())
 
 		// Update nextUpdate
-		c.nextUpdate = c.nextUpdate.Add(c.spec.Interval)
+		c.nextUpdate = c.nextUpdate.Add(c.interval)
 
 		// Wait for next update
 		c.waitForNextUpdate(ctx, waitDur)

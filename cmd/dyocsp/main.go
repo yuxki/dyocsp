@@ -148,39 +148,42 @@ func run(cfg config.DyOCSPConfig, responder *dyocsp.Responder) {
 	// Create CacheBatch
 	quite := make(chan string)
 
-	bSpec := dyocsp.CacheBatchSpec{
-		Interval: time.Second * time.Duration(cfg.Interval),
-		Delay:    time.Second * time.Duration(cfg.Delay),
-		Logger:   log.Logger.With().Str("role", cacheBatchRole).Logger(),
-		Strict:   cfg.Strict,
-	}
-	batch := dyocsp.NewCacheBatch(
+	blogger := log.Logger.With().Str("role", cacheBatchRole).Logger()
+	batch, err := dyocsp.NewCacheBatch(
 		cfg.CA,
 		cacheStore,
 		dbClient,
 		responder,
 		date.NowGMT(),
-		bSpec,
+		// bSpec,
+		dyocsp.WithIntervalSec(cfg.Interval),
+		dyocsp.WithDelay(time.Second*time.Duration(cfg.Delay)),
+		dyocsp.WithStrict(cfg.Strict),
+		dyocsp.WithLogger(&blogger),
 		dyocsp.WithQuiteChan(quite),
 	)
+	if err != nil {
+		panic(err)
+	}
 
 	// Run batch generating caches
 	go batch.Run(rootCtx)
 
 	// Create Server
 	hLogger := log.Logger.With().Str("role", CacheHandlerRole).Logger()
-	hSpec := dyocsp.CacheHandlerSpec{
-		MaxRequestBytes: cfg.MaxRequestBytes,
-		MaxAge:          cfg.CacheControlMaxAge,
-		Logger:          hLogger,
-	}
-
 	cacheStoreRO := cacheStore.NewReadOnlyCacheStore()
 
 	chain := alice.New()
 	chain = chain.Append(hlog.NewHandler(hLogger))
 	chain = chainHTTPAccessHandler(chain)
-	cacheHander := dyocsp.NewCacheHandler(cacheStoreRO, responder, hSpec, chain)
+	cacheHander := dyocsp.NewCacheHandler(
+		cacheStoreRO,
+		responder,
+		chain,
+		dyocsp.WithMaxAge(cfg.CacheControlMaxAge),
+		dyocsp.WithMaxRequestBytes(cfg.MaxRequestBytes),
+		dyocsp.WithHandlerLogger(&hLogger),
+	)
 
 	host := net.JoinHostPort(cfg.Domain, cfg.Port)
 	server := dyocsp.CreateHTTPServer(
@@ -190,7 +193,7 @@ func run(cfg config.DyOCSPConfig, responder *dyocsp.Responder) {
 	)
 
 	// Run Server
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil {
 		if errors.Is(err, http.ErrServerClosed) {
 			panic(err)

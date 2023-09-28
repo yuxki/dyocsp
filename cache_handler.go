@@ -10,26 +10,12 @@ import (
 
 	"github.com/justinas/alice"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/yuxki/dyocsp/pkg/cache"
 	"github.com/yuxki/dyocsp/pkg/date"
 	"github.com/yuxki/dyocsp/pkg/db"
 	"golang.org/x/crypto/ocsp"
 )
-
-// CacheHandlerSpec is required cache handler specification.
-type CacheHandlerSpec struct {
-	// MaxRequestBytes defines the maximum size of a request in bytes. If the content
-	// of a request exceeds this parameter, the handler will respond with
-	// http.StatusRequestEntityTooLarge.
-	MaxRequestBytes int
-	// MaxAge defines the maximum age, in seconds, for a cached response as
-	// specified in the Cache-Control max-age directive.
-	// If the duration until the nextUpdate of a cached response exceeds MaxAge,
-	// the handler sets the response's Cache-Control max-age directive to that duration.
-	MaxAge int
-	// Logger is specified zerolog.Logger.
-	Logger zerolog.Logger
-}
 
 func handleNotallowedMethod(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -60,8 +46,42 @@ func handleOverMaxRequestBytes(max int) func(http.Handler) http.Handler {
 type CacheHandler struct {
 	cacheStore *cache.ResponseCacheStoreRO
 	responder  *Responder
-	spec       CacheHandlerSpec
-	now        date.Now
+	// spec       CacheHandlerSpec
+	now             date.Now
+	maxRequestBytes int
+	maxAge          int
+	logger          *zerolog.Logger
+}
+
+// CacheHandlerOption is type of an functional option for dyocsp.CacheHandler.
+type CacheHandlerOption func(*CacheHandler)
+
+// MaxRequestBytes defines the maximum size of a request in bytes. If the content
+// of a request exceeds this parameter, the handler will respond with
+// http.StatusRequestEntityTooLarge. Default value is 0, and if 0 is set, this
+// option is ignored.
+func WithMaxRequestBytes(max int) func(*CacheHandler) {
+	return func(c *CacheHandler) {
+		c.maxRequestBytes = max
+	}
+}
+
+// MaxAge defines the maximum age, in seconds, for a cached response as
+// specified in the Cache-Control max-age directive.
+// If the duration until the nextUpdate of a cached response exceeds MaxAge,
+// the handler sets the response's Cache-Control max-age directive to that duration.
+// Default value is 0.
+func WithMaxAge(max int) func(*CacheHandler) {
+	return func(c *CacheHandler) {
+		c.maxAge = max
+	}
+}
+
+// WithHandlerLogger sets logger. If not set, global logger is used.
+func WithHandlerLogger(logger *zerolog.Logger) func(*CacheHandler) {
+	return func(c *CacheHandler) {
+		c.logger = logger
+	}
 }
 
 // NewCacheHandler creates a new instance of dyocsp.CacheHandler.
@@ -73,18 +93,27 @@ type CacheHandler struct {
 func NewCacheHandler(
 	cacheStore *cache.ResponseCacheStoreRO,
 	responder *Responder,
-	spec CacheHandlerSpec,
 	chain alice.Chain,
+	opts ...CacheHandlerOption,
 ) http.Handler {
-	chain = chain.Append(handleNotallowedMethod)
-	chain = chain.Append(handleOverMaxRequestBytes(spec.MaxRequestBytes))
-
-	return chain.Then(CacheHandler{
+	handler := CacheHandler{
 		cacheStore: cacheStore,
 		responder:  responder,
-		spec:       spec,
 		now:        date.NowGMT,
-	})
+	}
+
+	for _, opt := range opts {
+		opt(&handler)
+	}
+
+	if handler.logger == nil {
+		handler.logger = &log.Logger
+	}
+
+	chain = chain.Append(handleNotallowedMethod)
+	chain = chain.Append(handleOverMaxRequestBytes(handler.maxRequestBytes))
+
+	return chain.Then(handler)
 }
 
 type invalidIssuerError struct {
@@ -144,7 +173,7 @@ func (c CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set logger attributes same as access log
-	logger := c.spec.Logger.With().Str("ip", r.RemoteAddr).Str("user_agent", r.UserAgent()).Logger()
+	logger := c.logger.With().Str("ip", r.RemoteAddr).Str("user_agent", r.UserAgent()).Logger()
 
 	// Handle as OCSP request
 	w.Header().Add("Content-Type", "application/ocsp-response")
@@ -192,7 +221,7 @@ func (c CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	addSuccessOCSPResHeader(w, cache, nowT, c.spec.MaxAge)
+	addSuccessOCSPResHeader(w, cache, nowT, c.maxAge)
 	_, err = cache.Write(w)
 	if err != nil {
 		logger.Error().Err(err).Msg("")

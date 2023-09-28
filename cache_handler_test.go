@@ -62,12 +62,10 @@ func TestCacheHandler_ServeHTTP_Methods(t *testing.T) {
 
 	cacheStore := cache.NewResponseCacheStore()
 	responder := testCreateDelegatedResponder(t)
-	spec := CacheHandlerSpec{
-		MaxRequestBytes: 512,
-		MaxAge:          256,
-		Logger:          log.Logger,
-	}
-	handler := NewCacheHandler(cacheStore.NewReadOnlyCacheStore(), responder, spec, alice.New())
+	handler := NewCacheHandler(
+		cacheStore.NewReadOnlyCacheStore(), responder, alice.New(),
+		WithMaxRequestBytes(512), WithMaxAge(256),
+	)
 
 	s, url := testCreateServer(t, "8081", handler)
 
@@ -120,12 +118,10 @@ func TestCacheHandler_ServeHTTP_OverMaxRequestSize(t *testing.T) {
 
 	cacheStore := cache.NewResponseCacheStore()
 	responder := testCreateDelegatedResponder(t)
-	spec := CacheHandlerSpec{
-		MaxRequestBytes: 1,
-		MaxAge:          256,
-		Logger:          log.Logger,
-	}
-	handler := NewCacheHandler(cacheStore.NewReadOnlyCacheStore(), responder, spec, alice.New())
+	handler := NewCacheHandler(
+		cacheStore.NewReadOnlyCacheStore(), responder, alice.New(),
+		WithMaxRequestBytes(1), WithMaxAge(256),
+	)
 
 	s, url := testCreateServer(t, "8082", handler)
 
@@ -155,12 +151,10 @@ func Test_CacheHandler_ServeHTTP_MalformedRequest(t *testing.T) {
 
 	cacheStore := cache.NewResponseCacheStore()
 	responder := testCreateDelegatedResponder(t)
-	spec := CacheHandlerSpec{
-		MaxRequestBytes: 512,
-		MaxAge:          256,
-		Logger:          log.Logger,
-	}
-	handler := NewCacheHandler(cacheStore.NewReadOnlyCacheStore(), responder, spec, alice.New())
+	handler := NewCacheHandler(
+		cacheStore.NewReadOnlyCacheStore(), responder, alice.New(),
+		WithMaxRequestBytes(512), WithMaxAge(256),
+	)
 
 	s, url := testCreateServer(t, "8083", handler)
 
@@ -340,12 +334,10 @@ func TestCacheHandler_ServeHTTP_ResponseSuccess(t *testing.T) {
 	cacheStore := cache.NewResponseCacheStore()
 	cacheStore.Update([]cache.ResponseCache{resCache})
 
-	spec := CacheHandlerSpec{
-		MaxRequestBytes: 512,
-		MaxAge:          256,
-		Logger:          log.Logger,
-	}
-	handler := NewCacheHandler(cacheStore.NewReadOnlyCacheStore(), responder, spec, alice.New())
+	handler := NewCacheHandler(
+		cacheStore.NewReadOnlyCacheStore(), responder, alice.New(),
+		WithMaxRequestBytes(512), WithMaxAge(256),
+	)
 
 	res := testHandler(t, "8090", handler, responder)
 	defer res.Body.Close()
@@ -360,12 +352,10 @@ func TestCacheHandler_ServeHTTP_ResponseFailed_DiffIssuer(t *testing.T) {
 
 	cacheStore := cache.NewResponseCacheStore()
 	responder := testCreateDelegatedResponder(t)
-	spec := CacheHandlerSpec{
-		MaxRequestBytes: 512,
-		MaxAge:          256,
-		Logger:          log.Logger,
-	}
-	handler := NewCacheHandler(cacheStore.NewReadOnlyCacheStore(), responder, spec, alice.New())
+	handler := NewCacheHandler(
+		cacheStore.NewReadOnlyCacheStore(), responder, alice.New(),
+		WithMaxRequestBytes(512), WithMaxAge(256),
+	)
 
 	res := testHandler(t, "8085", handler, responder)
 	defer res.Body.Close()
@@ -385,12 +375,10 @@ func TestCacheHandler_ServeHTTP_ResponseFailed_SerialNotMatched(t *testing.T) {
 
 	cacheStore := cache.NewResponseCacheStore()
 	responder := testCreateDelegatedResponder(t)
-	spec := CacheHandlerSpec{
-		MaxRequestBytes: 512,
-		MaxAge:          256,
-		Logger:          log.Logger,
-	}
-	handler := NewCacheHandler(cacheStore.NewReadOnlyCacheStore(), responder, spec, alice.New())
+	handler := NewCacheHandler(
+		cacheStore.NewReadOnlyCacheStore(), responder, alice.New(),
+		WithMaxRequestBytes(512), WithMaxAge(256),
+	)
 
 	res := testHandler(t, "8086", handler, responder)
 	defer res.Body.Close()
@@ -414,12 +402,10 @@ func TestCacheHandler_ServeHTTP_NowIsOverNextUpdate(t *testing.T) {
 	cacheStore := cache.NewResponseCacheStore()
 	cacheStore.Update([]cache.ResponseCache{resCache})
 
-	spec := CacheHandlerSpec{
-		MaxRequestBytes: 512,
-		MaxAge:          256,
-		Logger:          log.Logger,
-	}
-	handler := NewCacheHandler(cacheStore.NewReadOnlyCacheStore(), responder, spec, alice.New())
+	handler := NewCacheHandler(
+		cacheStore.NewReadOnlyCacheStore(), responder, alice.New(),
+		WithMaxRequestBytes(512), WithMaxAge(256),
+	)
 
 	res := testHandler(t, "8087", handler, responder)
 	defer res.Body.Close()
@@ -445,12 +431,10 @@ func TestCacheHandler_ServeHTTP_MaxAgeOverNextUpdate(t *testing.T) {
 	cacheStore := cache.NewResponseCacheStore()
 	cacheStore.Update([]cache.ResponseCache{resCache})
 
-	spec := CacheHandlerSpec{
-		MaxRequestBytes: 512,
-		MaxAge:          256,
-		Logger:          log.Logger,
-	}
-	handler := NewCacheHandler(cacheStore.NewReadOnlyCacheStore(), responder, spec, alice.New())
+	handler := NewCacheHandler(
+		cacheStore.NewReadOnlyCacheStore(), responder, alice.New(),
+		WithMaxRequestBytes(512), WithMaxAge(256),
+	)
 
 	res := testHandler(t, "8088", handler, responder)
 	defer res.Body.Close()
