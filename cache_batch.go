@@ -24,6 +24,12 @@ func (e *expirationLogger) WarnMsg(serial *big.Int, msg string) {
 	e.Logger.Warn().Msg(fmt.Sprintf("%s: %s", msg, serial.Text(db.SerialBase)))
 }
 
+// CADBClient is an interface that represents a client for scanning a database
+// and creating IntermediateEntries.
+type CADBClient interface {
+	Scan(ctx context.Context) ([]db.IntermidiateEntry, error)
+}
+
 func createExpirationLogger(expiration string, logger zerolog.Logger) *db.ExpirationControl {
 	expLogger := expirationLogger{Logger: logger}
 	var expCtl *db.ExpirationControl
@@ -62,7 +68,7 @@ type CacheBatchSpec struct {
 type CacheBatch struct {
 	ca          string
 	cacheStore  *cache.ResponseCacheStore
-	caDBClient  db.CADBClient
+	caDBClient  CADBClient
 	responder   *Responder
 	now         date.Now
 	nextUpdate  time.Time
@@ -87,7 +93,7 @@ func WithQuiteChan(quite chan string) func(*CacheBatch) {
 func NewCacheBatch(
 	ca string,
 	cacheStore *cache.ResponseCacheStore,
-	caDBClient db.CADBClient,
+	caDBClient CADBClient,
 	responder *Responder,
 	nextUpdate time.Time,
 	spec CacheBatchSpec,
