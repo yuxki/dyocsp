@@ -93,7 +93,6 @@ linters:
 issues:
   exclude-rules:
     - linters:
-        - ireturn # Too strict
         - funlen # Too strict
       path: 'main.go'
     - linters:
