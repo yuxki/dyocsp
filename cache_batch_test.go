@@ -120,7 +120,7 @@ func TestNewCacheBatch_ErrDelayExceedsInterval(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected non-nil error.")
 	}
-	if errors.Is(err, ErrDelayExceedsInterval) {
+	if !errors.Is(err, ErrDelayExceedsInterval) {
 		t.Fatal("unexpected error returned.")
 	}
 }
