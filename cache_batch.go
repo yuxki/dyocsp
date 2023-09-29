@@ -221,13 +221,13 @@ func (c *CacheBatch) RunOnce(ctx context.Context) []cache.ResponseCache {
 	expCtl := createExpirationLogger(c.expiration, *logger)
 	exch := db.NewEntryExchange()
 	entries := make([]db.CertificateEntry, 0, len(itmds))
-	for _, itmd := range itmds {
+	for idx := range itmds {
 		// When certificate is expired, response cache is not created.
-		if itmd.RevType == "E" {
+		if itmds[idx].RevType == "E" {
 			continue
 		}
 
-		ce := exch.ParseCertificateEntry(itmd)
+		ce := exch.ParseCertificateEntry(itmds[idx])
 		if noerr := c.logEntryErrors(ce, logger); noerr {
 			entries = append(entries, ce)
 		}
@@ -241,8 +241,8 @@ func (c *CacheBatch) RunOnce(ctx context.Context) []cache.ResponseCache {
 
 	// CertificateEntry --> cache.ResponseCache(Pre-Signed)
 	resCaches := make([]cache.ResponseCache, 0, len(entries))
-	for _, entry := range entries {
-		resCache, err := cache.CreatePreSignedResponseCache(entry, c.nextUpdate, c.interval)
+	for idx := range entries {
+		resCache, err := cache.CreatePreSignedResponseCache(entries[idx], c.nextUpdate, c.interval)
 		if err != nil {
 			logger.Error().Err(err).Msg("")
 		}
@@ -255,10 +255,10 @@ func (c *CacheBatch) RunOnce(ctx context.Context) []cache.ResponseCache {
 
 	// cache.ResponseCache(Pre-Signed) --> cache.ResponseCache(Signed)
 	signedCaches := make([]cache.ResponseCache, 0, len(resCaches))
-	for _, rc := range resCaches {
-		signedCache, err := c.responder.SignCacheResponse(rc)
+	for idx := range resCaches {
+		signedCache, err := c.responder.SignCacheResponse(resCaches[idx])
 		if err != nil {
-			logger.Error().Msg(fmt.Sprintf("Failed to sign :%v", rc))
+			logger.Error().Msg(fmt.Sprintf("Failed to sign :%v", resCaches[idx]))
 		} else {
 			signedCaches = append(signedCaches, signedCache)
 		}
@@ -344,8 +344,8 @@ func (c *CacheBatch) Run(ctx context.Context) {
 
 		// Update cache store
 		invs := c.cacheStore.Update(caches)
-		for _, inv := range invs {
-			logger.Error().Msgf("Invalid response cache: %s", inv.Entry().Serial)
+		for i := range invs {
+			logger.Error().Msgf("Invalid response cache: %s", invs[i].Entry().Serial)
 		}
 		logger.Info().Msg("Response cache updated.")
 

@@ -57,35 +57,35 @@ func (r *ResponseCacheStore) Update(caches []ResponseCache) []ResponseCache {
 	cacheMap := make(map[string]ResponseCache, len(caches))
 	duplMap := make(map[string]interface{}, len(caches))
 
-	for _, cache := range caches {
+	for idx := range caches {
 		// Check if it is possible to retrieve the serial number
-		key, ok := cacheMapKey(cache.Template().SerialNumber)
+		key, ok := cacheMapKey(caches[idx].Template().SerialNumber)
 		if !ok {
-			invalids = append(invalids, cache)
+			invalids = append(invalids, caches[idx])
 			continue
 		}
 
 		// Check not dupulicated
 		if _, ok := duplMap[key]; ok {
-			invalids = append(invalids, cache)
+			invalids = append(invalids, caches[idx])
 			continue
 		}
 
 		if _, ok := cacheMap[key]; ok {
 			invalids = append(invalids, cacheMap[key])
-			invalids = append(invalids, cache)
+			invalids = append(invalids, caches[idx])
 			delete(cacheMap, key)
 			duplMap[key] = nil
 			continue
 		}
 
 		// Check if the OCSP response exists
-		if res := cache.Response(); res == nil {
-			invalids = append(invalids, cache)
+		if res := caches[idx].Response(); res == nil {
+			invalids = append(invalids, caches[idx])
 			continue
 		}
 
-		cacheMap[key] = cache
+		cacheMap[key] = caches[idx]
 	}
 
 	r.cacheMap = cacheMap

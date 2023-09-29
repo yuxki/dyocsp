@@ -151,8 +151,8 @@ func (d DynamoDBClient) Scan(ctx context.Context) ([]IntermidiateEntry, error) {
 	}
 
 	entries := make([]IntermidiateEntry, 0, len(items))
-	for _, item := range items {
-		e, err := UnmarshalDynamoDBItem(item)
+	for i := range items {
+		e, err := UnmarshalDynamoDBItem(items[i])
 		if err != nil {
 			continue
 		}
