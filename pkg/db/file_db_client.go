@@ -61,19 +61,19 @@ func (h FileDBClient) Scan(ctx context.Context) ([]IntermidiateEntry, error) {
 		s := scanner.Text()
 		cols := strings.Split(s, "\t")
 
-		for i, col := range cols {
-			switch i {
+		for idx := range cols {
+			switch idx {
 			case FileDBColRevTypeIdx:
-				entry.RevType = col
+				entry.RevType = cols[idx]
 			case FileDBColExpDateIdx:
-				entry.ExpDate = col
+				entry.ExpDate = cols[idx]
 			case FileDBColRevDateAndCRLReasonIdx:
-				if rc := strings.Split(col, ","); len(rc) == IdxCRLReason+1 {
+				if rc := strings.Split(cols[idx], ","); len(rc) == IdxCRLReason+1 {
 					entry.RevDate = rc[IdxRevDate]
 					entry.CRLReason = rc[IdxCRLReason]
 				}
 			case FileDBColSerialIdx:
-				entry.Serial = col
+				entry.Serial = cols[idx]
 			default:
 			}
 		}

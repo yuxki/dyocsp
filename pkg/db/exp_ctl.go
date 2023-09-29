@@ -50,27 +50,27 @@ func WithLogger(logger Logger) func(*ExpirationControl) {
 func (c *ExpirationControl) Do(now time.Time, entries []CertificateEntry) []CertificateEntry {
 	valids := make([]CertificateEntry, 0, len(entries))
 
-	for _, entry := range entries {
-		if entry.RevType == Revoked {
-			valids = append(valids, entry)
+	for idx := range entries {
+		if entries[idx].RevType == Revoked {
+			valids = append(valids, entries[idx])
 			continue
 		}
 
-		if now.Before(entry.ExpDate) {
-			valids = append(valids, entry)
+		if now.Before(entries[idx].ExpDate) {
+			valids = append(valids, entries[idx])
 			continue
 		}
 
 		if c.warnOnExpiration {
 			c.logger.WarnMsg(
-				entry.Serial, "It is valid but it has exceeded expiration date",
+				entries[idx].Serial, "It is valid but it has exceeded expiration date",
 			)
-			valids = append(valids, entry)
+			valids = append(valids, entries[idx])
 			continue
 		}
 
 		c.logger.InvalidMsg(
-			entry.Serial.Text(SerialBase), "It is no longer valid because it has exceeded expiration date",
+			entries[idx].Serial.Text(SerialBase), "It is no longer valid because it has exceeded expiration date",
 		)
 	}
 
