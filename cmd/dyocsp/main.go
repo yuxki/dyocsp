@@ -58,23 +58,27 @@ func newResponder(cfg config.DyOCSPConfig) *dyocsp.Responder {
 	return responder
 }
 
-func newFileDBClient(cfg config.DyOCSPConfig) db.FileDBClient {
+var ErrFileDBInvalid = errors.New("invalid db file")
+
+func newFileDBClient(cfg config.DyOCSPConfig) (db.FileDBClient, error) {
+	var dbClient db.FileDBClient
+
 	abs, err := filepath.Abs(cfg.FileDBFile)
 	if err != nil {
-		stdlog.Fatal(err.Error())
+		return dbClient, err
 	}
 	info, err := os.Stat(abs)
 	if err != nil {
-		stdlog.Fatal(err.Error())
+		return dbClient, err
 	}
 	if info.IsDir() {
-		stdlog.Fatalf("%s is not a file.", abs)
+		return dbClient, ErrFileDBInvalid
 	}
 
-	return db.NewFileDBClient(cfg.CA, cfg.FileDBFile)
+	return db.NewFileDBClient(cfg.CA, cfg.FileDBFile), nil
 }
 
-func newDynamoDBClient(cfg config.DyOCSPConfig) db.DynamoDBClient {
+func newDynamoDBClient(cfg config.DyOCSPConfig) (db.DynamoDBClient, error) {
 	ca := cfg.CA
 	caTable := cfg.DynamoDBTableName
 	caGsi := cfg.DynamoDBCAGsi
@@ -84,7 +88,8 @@ func newDynamoDBClient(cfg config.DyOCSPConfig) db.DynamoDBClient {
 		awsconfig.WithRetryMaxAttempts(cfg.DynamoDBRetryMaxAttempts),
 	)
 	if err != nil {
-		panic(err)
+		var dynamoDBClient db.DynamoDBClient
+		return dynamoDBClient, err
 	}
 
 	var client *dynamodb.Client
@@ -96,11 +101,7 @@ func newDynamoDBClient(cfg config.DyOCSPConfig) db.DynamoDBClient {
 		})
 	}
 
-	return db.NewDynamoDBClient(client, &ca, &caTable, &caGsi, cfg.DynamoDBTimeout)
-}
-
-func printUsage() {
-	stdlog.Println("Usage: dyocsp -c CONFIG_FILE")
+	return db.NewDynamoDBClient(client, &ca, &caTable, &caGsi, cfg.DynamoDBTimeout), nil
 }
 
 const (
@@ -123,7 +124,7 @@ func chainHTTPAccessHandler(c alice.Chain) alice.Chain {
 	return chain
 }
 
-func run(cfg config.DyOCSPConfig, responder *dyocsp.Responder) {
+func run(cfg config.DyOCSPConfig, responder *dyocsp.Responder) error {
 	setupLogger(cfg)
 
 	rootCtx := context.Background()
@@ -132,14 +133,18 @@ func run(cfg config.DyOCSPConfig, responder *dyocsp.Responder) {
 
 	// Create DB client
 	var dbClient dyocsp.CADBClient
+	var err error
 
 	switch cfg.DBType {
 	case config.FileDBType:
-		dbClient = newFileDBClient(cfg)
+		dbClient, err = newFileDBClient(cfg)
 	case config.DynamoDBType:
-		dbClient = newDynamoDBClient(cfg)
+		dbClient, err = newDynamoDBClient(cfg)
 	default:
-		panic(config.MissingParameterError{Param: "db.<db-type>"})
+		err = config.MissingParameterError{Param: "db.<db-type>"}
+	}
+	if err != nil {
+		return err
 	}
 
 	// Create cache store
@@ -163,7 +168,7 @@ func run(cfg config.DyOCSPConfig, responder *dyocsp.Responder) {
 		dyocsp.WithQuiteChan(quite),
 	)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// Run batch generating caches
@@ -203,6 +208,8 @@ func run(cfg config.DyOCSPConfig, responder *dyocsp.Responder) {
 		stdlog.Printf("Batch loop quited: received message from caching batch: %s", <-quite)
 		stdlog.Fatalf("error:listening server: %v", err)
 	}
+
+	return nil
 }
 
 func main() {
@@ -215,28 +222,26 @@ func main() {
 	flag.Parse()
 
 	if *cfgPtr == "" {
-		printUsage()
+		flag.PrintDefaults()
 		os.Exit(1)
 	}
 
 	cfgF, err := os.Open(*cfgPtr)
 	if err != nil {
-		stdlog.Fatalf("error:cfg file: %v", err)
-		os.Exit(1)
+		stdlog.Fatal(err)
 	}
 
 	var cfgYml config.ConfigYAML
 	err = yaml.NewDecoder(cfgF).Decode(&cfgYml)
 	if err != nil {
-		stdlog.Fatalf("error:cfg file: %v", err)
-		os.Exit(1)
+		stdlog.Fatal(err)
 	}
 
 	var cfg config.DyOCSPConfig
 	cfg, errs := cfgYml.Verify(cfg)
 	if errs != nil {
 		for _, err := range errs {
-			stdlog.Printf("error:cfg file: %v", err)
+			stdlog.Print(err)
 		}
 		os.Exit(1)
 	}
@@ -248,5 +253,8 @@ func main() {
 
 	responder := newResponder(cfg)
 
-	run(cfg, responder)
+	err = run(cfg, responder)
+	if err != nil {
+		stdlog.Fatal(err)
+	}
 }
