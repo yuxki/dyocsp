@@ -205,7 +205,7 @@ func (y ConfigYAML) VerifyLogConfig(cfg DyOCSPConfig) (DyOCSPConfig, []error) {
 		nCfg.ZerologFormat = PrettyFormat
 	}
 
-	if len(errs) > 0 {
+	if len(errs) != 0 {
 		return cfg, errs
 	}
 	return nCfg, nil
@@ -225,7 +225,7 @@ func (y ConfigYAML) VerifyResponderConfig(cfg DyOCSPConfig) (DyOCSPConfig, []err
 	// Responder.Issuer          Required
 	nCfg.Issuer, errs = markMissRequiredStr(y.Responder.Issuer, "responder.issuer_certificate", errs)
 
-	if len(errs) > 0 {
+	if len(errs) != 0 {
 		return cfg, errs
 	}
 	return nCfg, nil
@@ -256,7 +256,7 @@ func (y ConfigYAML) VerifyCacheConfig(cfg DyOCSPConfig) (DyOCSPConfig, []error) 
 		nCfg.Delay = *y.Cache.Delay
 	}
 
-	if len(errs) > 0 {
+	if len(errs) != 0 {
 		return cfg, errs
 	}
 	return nCfg, nil
@@ -311,7 +311,7 @@ func (y ConfigYAML) VerifyDynamoDBConfig(cfg DyOCSPConfig) (DyOCSPConfig, []erro
 		nCfg.DynamoDBTimeout = *y.DB.DynamoDB.Timeout
 	}
 
-	if len(errs) > 0 {
+	if len(errs) != 0 {
 		return cfg, errs
 	}
 	return nCfg, nil
@@ -325,7 +325,7 @@ func (y ConfigYAML) VerifyFileDBConfig(cfg DyOCSPConfig) (DyOCSPConfig, []error)
 	// .DB.FileDB.File
 	nCfg.FileDBFile, errs = markMissRequiredStr(y.DB.FileDB.File, "db.file.file", errs)
 
-	if len(errs) > 0 {
+	if len(errs) != 0 {
 		return cfg, errs
 	}
 	return nCfg, nil
@@ -362,7 +362,7 @@ func (y ConfigYAML) VerifyDBConfig(cfg DyOCSPConfig) (DyOCSPConfig, []error) {
 		return cfg, errs
 	}
 
-	if len(errs) > 0 {
+	if len(errs) != 0 {
 		return cfg, errs
 	}
 	return nCfg, nil
@@ -418,7 +418,7 @@ func (y ConfigYAML) VerifyHTTPConfig(cfg DyOCSPConfig) (DyOCSPConfig, []error) {
 		nCfg.CacheControlMaxAge = *y.HTTP.CacheControlMaxAge
 	}
 
-	if len(errs) > 0 {
+	if len(errs) != 0 {
 		return cfg, errs
 	}
 	return nCfg, nil
@@ -453,35 +453,35 @@ func (y ConfigYAML) Verify(cfg DyOCSPConfig) (DyOCSPConfig, []error) {
 
 	// .Log.Level  Optional error, warn, info, debug (default: info)
 	nCfg, logErrs := y.VerifyLogConfig(nCfg)
-	if logErrs != nil {
+	if len(logErrs) != 0 {
 		errs = append(errs, logErrs...)
 	}
 
 	// .Responder
 	nCfg, responderErrs := y.VerifyResponderConfig(nCfg)
-	if responderErrs != nil {
+	if len(responderErrs) != 0 {
 		errs = append(errs, responderErrs...)
 	}
 
 	// .Cache
 	nCfg, cacheErrs := y.VerifyCacheConfig(nCfg)
-	if cacheErrs != nil {
+	if len(cacheErrs) != 0 {
 		errs = append(errs, cacheErrs...)
 	}
 
 	// .DB
 	nCfg, dbErrs := y.VerifyDBConfig(nCfg)
-	if dbErrs != nil {
+	if len(dbErrs) != 0 {
 		errs = append(errs, dbErrs...)
 	}
 
 	// .HTTP
 	nCfg, httpErrs := y.VerifyHTTPConfig(nCfg)
-	if httpErrs != nil {
+	if len(httpErrs) != 0 {
 		errs = append(errs, httpErrs...)
 	}
 
-	if len(errs) > 0 {
+	if len(errs) != 0 {
 		return cfg, errs
 	}
 	return nCfg, nil

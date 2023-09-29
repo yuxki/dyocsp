@@ -30,7 +30,7 @@ func handleNotallowedMethod(h http.Handler) http.Handler {
 func handleOverMaxRequestBytes(max int) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if max != 0 {
+			if max > 0 {
 				if r.ContentLength > int64(max) {
 					w.WriteHeader(http.StatusRequestEntityTooLarge)
 					return
@@ -58,8 +58,8 @@ type CacheHandlerOption func(*CacheHandler)
 
 // MaxRequestBytes defines the maximum size of a request in bytes. If the content
 // of a request exceeds this parameter, the handler will respond with
-// http.StatusRequestEntityTooLarge. Default value is 0, and if 0 is set, this
-// option is ignored.
+// http.StatusRequestEntityTooLarge. Default value is 0, and if 0 or less than 0 is
+// set, this option is ignored.
 func WithMaxRequestBytes(max int) func(*CacheHandler) {
 	return func(c *CacheHandler) {
 		c.maxRequestBytes = max
@@ -70,7 +70,7 @@ func WithMaxRequestBytes(max int) func(*CacheHandler) {
 // specified in the Cache-Control max-age directive.
 // If the duration until the nextUpdate of a cached response exceeds MaxAge,
 // the handler sets the response's Cache-Control max-age directive to that duration.
-// Default value is 0.
+// Default value is 0. If less than 0 is set, the default value is used.
 func WithMaxAge(max int) func(*CacheHandler) {
 	return func(c *CacheHandler) {
 		c.maxAge = max
@@ -83,6 +83,10 @@ func WithHandlerLogger(logger *zerolog.Logger) func(*CacheHandler) {
 		c.logger = logger
 	}
 }
+
+const (
+	DefaultMaxAge = 0
+)
 
 // NewCacheHandler creates a new instance of dyocsp.CacheHandler.
 // It chains the following handlers before the handler that sends the OCSP response.
@@ -104,6 +108,10 @@ func NewCacheHandler(
 
 	for _, opt := range opts {
 		opt(&handler)
+	}
+
+	if handler.maxAge < 0 {
+		handler.maxAge = DefaultMaxAge
 	}
 
 	if handler.logger == nil {

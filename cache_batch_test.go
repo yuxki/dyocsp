@@ -108,6 +108,27 @@ func TestNewCacheBatch_OptoinsSet(t *testing.T) {
 	}
 }
 
+func TestNewCacheBatch_OptoinsMinus(t *testing.T) {
+	t.Parallel()
+
+	currentDB := []db.IntermidiateEntry{}
+	client := StubCADBClient{"test-ca", currentDB}
+	responder := testCreateDelegatedResponder(t)
+	store := cache.NewResponseCacheStore()
+	batch, err := NewCacheBatch("test-ca", store, client, responder, date.NowGMT(),
+		WithIntervalSec(-1), WithDelay(-1))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if batch.interval != time.Second*DefaultInterval {
+		t.Error("minux value of interval is not changed to default.")
+	}
+	if batch.delay != 0 {
+		t.Error("minus value of delay is not changed to default.")
+	}
+}
+
 func TestNewCacheBatch_ErrDelayExceedsInterval(t *testing.T) {
 	t.Parallel()
 
