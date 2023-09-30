@@ -45,14 +45,20 @@ const (
 )
 
 // Scan reads a file and parses each line into an IntermediateEntry.
-func (h FileDBClient) Scan(ctx context.Context) ([]IntermidiateEntry, error) {
-	db, err := os.Open(h.dbFile)
+func (h FileDBClient) Scan(ctx context.Context) (entries []IntermidiateEntry, err error) {
+	file, err := os.Open(h.dbFile)
 	if err != nil {
 		return nil, fmt.Errorf("could not read file DB %s: %w", h.dbFile, err)
 	}
+	defer func() {
+		closeErr := file.Close()
+		if err == nil {
+			err = closeErr
+		}
+	}()
 
-	scanner := bufio.NewScanner(db)
-	entries := make([]IntermidiateEntry, 0)
+	scanner := bufio.NewScanner(file)
+	entries = make([]IntermidiateEntry, 0)
 
 	for scanner.Scan() {
 		var entry IntermidiateEntry
