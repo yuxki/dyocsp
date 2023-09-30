@@ -211,6 +211,29 @@ func TestCacheBatch_Run_DBNotChanged(t *testing.T) {
 	}
 }
 
+type StubChangebleCADBClient struct {
+	caName      string
+	db          []db.IntermidiateEntry
+	isFirstScan bool
+}
+
+func (s *StubChangebleCADBClient) Scan(ctx context.Context) ([]db.IntermidiateEntry, error) {
+	if s.isFirstScan {
+		s.isFirstScan = false
+		return s.db, nil
+	}
+	return []db.IntermidiateEntry{
+		{
+			Ca:        "test-ca",
+			Serial:    "8CA7B3FE5D7F007673C18CCC6A1F818085CDC5F5",
+			RevType:   "R",
+			ExpDate:   "230925234911Z",
+			RevDate:   "230826234911Z",
+			CRLReason: "unspecified",
+		},
+	}, nil
+}
+
 func TestCacheBatch_Run_DBChanged(t *testing.T) {
 	t.Parallel()
 
@@ -227,7 +250,7 @@ func TestCacheBatch_Run_DBChanged(t *testing.T) {
 			CRLReason: "",
 		},
 	}
-	client := StubCADBClient{"test-ca", currentDB}
+	client := &StubChangebleCADBClient{"test-ca", currentDB, true}
 	responder := testCreateDelegatedResponder(t)
 	store := cache.NewResponseCacheStore()
 	batch, err := NewCacheBatch(
@@ -246,15 +269,9 @@ func TestCacheBatch_Run_DBChanged(t *testing.T) {
 
 	go batch.Run(context.TODO())
 	time.Sleep(time.Second * 1)
-	// Do first
 
-	// Update DB &Interval
-	currentDB[0].RevType = wantType
-	currentDB[0].RevDate = "230826234911Z"
-	currentDB[0].CRLReason = "unspecified"
+	// Interval
 	time.Sleep(time.Second * 2)
-
-	// Do Second
 
 	// Do Assertion
 	cache := testGetCache(t, targetSerial, store)
