@@ -71,6 +71,9 @@ func TestNewCacheBatch_OptoinsDefaults(t *testing.T) {
 	if batch.quite != nil {
 		t.Error("value of quite is not default.")
 	}
+	if batch.updatedNotify != nil {
+		t.Error("value of updatedNotify is not default.")
+	}
 }
 
 func TestNewCacheBatch_OptoinsSet(t *testing.T) {
@@ -81,9 +84,17 @@ func TestNewCacheBatch_OptoinsSet(t *testing.T) {
 	responder := testCreateDelegatedResponder(t)
 	store := cache.NewResponseCacheStore()
 	logger := zerolog.New(os.Stdout).With().Logger()
-	ch := make(chan string)
+	quiteCh := make(chan string)
+	updatedNotifyCh := make(chan struct{})
 	batch, err := NewCacheBatch("test-ca", store, client, responder, date.NowGMT(),
-		WithIntervalSec(10), WithDelay(time.Second*5), WithStrict(true), WithExpiration(Warn), WithLogger(&logger), WithQuiteChan(ch))
+		WithIntervalSec(10),
+		WithDelay(time.Second*5),
+		WithStrict(true),
+		WithExpiration(Warn),
+		WithLogger(&logger),
+		WithQuiteChan(quiteCh),
+		WithUpdatedNotifyChan(updatedNotifyCh),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,6 +116,9 @@ func TestNewCacheBatch_OptoinsSet(t *testing.T) {
 	}
 	if batch.quite == nil {
 		t.Error("value of quite is not specified.")
+	}
+	if batch.updatedNotify == nil {
+		t.Error("value of updatedNotify is not specified.")
 	}
 }
 
@@ -253,6 +267,7 @@ func TestCacheBatch_Run_DBChanged(t *testing.T) {
 	client := &StubChangebleCADBClient{"test-ca", currentDB, true}
 	responder := testCreateDelegatedResponder(t)
 	store := cache.NewResponseCacheStore()
+	notifyCh := make(chan struct{})
 	batch, err := NewCacheBatch(
 		"test-ca",
 		store,
@@ -262,16 +277,16 @@ func TestCacheBatch_Run_DBChanged(t *testing.T) {
 		WithIntervalSec(1),
 		WithDelay(0),
 		WithStrict(false),
+		WithUpdatedNotifyChan(notifyCh),
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	go batch.Run(context.TODO())
-	time.Sleep(time.Second * 1)
-
 	// Interval
-	time.Sleep(time.Second * 2)
+	<-notifyCh
+	<-notifyCh
 
 	// Do Assertion
 	cache := testGetCache(t, targetSerial, store)
@@ -299,6 +314,7 @@ func TestCacheBatch_Run_DelegatedResponder(t *testing.T) {
 	client := StubCADBClient{"test-ca", fileDB}
 	responder := testCreateDelegatedResponder(t)
 	store := cache.NewResponseCacheStore()
+	notifyCh := make(chan struct{})
 	batch, err := NewCacheBatch(
 		"test-ca",
 		store,
@@ -308,13 +324,14 @@ func TestCacheBatch_Run_DelegatedResponder(t *testing.T) {
 		WithIntervalSec(1),
 		WithDelay(0),
 		WithStrict(false),
+		WithUpdatedNotifyChan(notifyCh),
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	go batch.Run(context.TODO())
-	time.Sleep(time.Second * 1)
+	<-notifyCh
 
 	cache := testGetCache(t, targetSerialStr, store)
 
@@ -341,6 +358,7 @@ func TestCacheBatch_Run_DirectResponder(t *testing.T) {
 	client := StubCADBClient{"test-ca", fileDB}
 	responder := testCreateDirectResponder(t)
 	store := cache.NewResponseCacheStore()
+	notifyCh := make(chan struct{})
 	batch, err := NewCacheBatch(
 		"test-ca",
 		store,
@@ -350,13 +368,14 @@ func TestCacheBatch_Run_DirectResponder(t *testing.T) {
 		WithIntervalSec(1),
 		WithDelay(0),
 		WithStrict(false),
+		WithUpdatedNotifyChan(notifyCh),
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	go batch.Run(context.TODO())
-	time.Sleep(time.Second * 1)
+	<-notifyCh
 
 	cache := testGetCache(t, targetSerialStr, store)
 
