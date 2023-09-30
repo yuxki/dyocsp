@@ -19,7 +19,7 @@ type ResponseCacheStore struct {
 	cacheMap  map[string]ResponseCache
 	now       date.Now
 	UpdatedAt time.Time
-	mu        sync.Mutex
+	mu        sync.RWMutex
 }
 
 // NewResponseCacheStore creates and retruns new instance of ResponseCacheStore.
@@ -117,9 +117,9 @@ func (r *ResponseCacheStore) Get(serialNumber *big.Int) (*ResponseCache, bool) {
 
 	// Copy the cache map address for data protection
 	// from replacing address by the updating cache job
-	r.mu.Lock()
+	r.mu.RLock()
 	cm := r.cacheMap
-	r.mu.Unlock()
+	r.mu.RUnlock()
 	cache, ok = cm[key]
 	if !ok {
 		return nil, false
