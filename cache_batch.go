@@ -60,12 +60,13 @@ type CacheBatch struct {
 	batchSerial int
 	interval    time.Duration
 	// Options
-	intervalSec int
-	delay       time.Duration
-	strict      bool
-	expiration  expBehavior
-	quite       chan string
-	logger      *zerolog.Logger
+	intervalSec   int
+	delay         time.Duration
+	strict        bool
+	expiration    expBehavior
+	quite         chan string
+	updatedNotify chan struct{}
+	logger        *zerolog.Logger
 }
 
 // Default values.
@@ -132,9 +133,18 @@ func WithLogger(logger *zerolog.Logger) func(*CacheBatch) {
 // WithQuietChan sets a quiet message channel, which
 // stops the loop of dyocsp.CacheBatch.Run(). It also sends a message immediately
 // before quieting the loop.
-func WithQuiteChan(quite chan string) func(*CacheBatch) {
+func WithQuiteChan(ch chan string) func(*CacheBatch) {
 	return func(c *CacheBatch) {
-		c.quite = quite
+		c.quite = ch
+	}
+}
+
+// WithUpdatedNotifyChan sets a channel to notify when the cache store is updated.
+// To ensure that the batch waits until a notify is received, the user should
+// create a receiver.
+func WithUpdatedNotifyChan(ch chan struct{}) func(*CacheBatch) {
+	return func(c *CacheBatch) {
+		c.updatedNotify = ch
 	}
 }
 
@@ -348,6 +358,10 @@ func (c *CacheBatch) Run(ctx context.Context) {
 			logger.Error().Msgf("Invalid response cache: %s", invs[i].Entry().Serial)
 		}
 		logger.Info().Msg("Response cache updated.")
+
+		if c.updatedNotify != nil {
+			c.updatedNotify <- struct{}{}
+		}
 
 		// Summury of this loop batch
 		c.logBatchSummary(ctx, startTime)
