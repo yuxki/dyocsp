@@ -55,7 +55,7 @@ func (r *ResponseCacheStore) Update(caches []ResponseCache) []ResponseCache {
 	}
 
 	cacheMap := make(map[string]ResponseCache, len(caches))
-	duplMap := make(map[string]interface{}, len(caches))
+	duplSet := make(map[string]struct{}, len(caches))
 
 	for idx := range caches {
 		// Check if it is possible to retrieve the serial number
@@ -66,7 +66,7 @@ func (r *ResponseCacheStore) Update(caches []ResponseCache) []ResponseCache {
 		}
 
 		// Check not dupulicated
-		if _, ok := duplMap[key]; ok {
+		if _, ok := duplSet[key]; ok {
 			invalids = append(invalids, caches[idx])
 			continue
 		}
@@ -75,7 +75,7 @@ func (r *ResponseCacheStore) Update(caches []ResponseCache) []ResponseCache {
 			invalids = append(invalids, cacheMap[key])
 			invalids = append(invalids, caches[idx])
 			delete(cacheMap, key)
-			duplMap[key] = nil
+			duplSet[key] = struct{}{}
 			continue
 		}
 
