@@ -251,6 +251,10 @@ func main() {
 		os.Exit(0)
 	}
 
+	if err := cfgF.Close(); err != nil {
+		stdlog.Printf("failed to close file: %v\n", err)
+	}
+
 	responder := newResponder(cfg)
 
 	err = run(cfg, responder)
