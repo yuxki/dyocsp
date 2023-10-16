@@ -64,6 +64,7 @@ linters-settings:
             desc: Should be replaced by standard lib errors package
   funlen:
     lines: 120
+    statements: 120
 
 linters:
   enable-all: true

@@ -26,7 +26,7 @@ Please try [Demo](#Demo) after download.
 - [DynamoDB](docs/dynamodb.md)
 
 #### Protocol
-- HTTP (POST Method Only)
+- HTTP
 
 #### Signing Key Format
 - PKCS# 8

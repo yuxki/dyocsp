@@ -2,9 +2,12 @@ package dyocsp
 
 import (
 	"crypto"
+	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"path"
 	"reflect"
 	"time"
 
@@ -17,12 +20,22 @@ import (
 	"golang.org/x/crypto/ocsp"
 )
 
-func handleNotallowedMethod(h http.Handler) http.Handler {
+const GETMethodMaxRequestSize = 255
+
+func handleHTTPMethod(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
+		switch r.Method {
+		case http.MethodPost:
+		case http.MethodGet:
+			if r.ContentLength > int64(GETMethodMaxRequestSize) {
+				w.WriteHeader(http.StatusMethodNotAllowed)
+				return
+			}
+		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
+
 		h.ServeHTTP(w, r)
 	})
 }
@@ -91,7 +104,7 @@ const (
 // NewCacheHandler creates a new instance of dyocsp.CacheHandler.
 // It chains the following handlers before the handler that sends the OCSP response.
 // (It uses 'https://github.com/justinas/alice' to chain the handlers.)
-//   - Send http.StatusMethodNotAllowed unless the request method is POST.
+//   - Send http.StatusMethodNotAllowed unless the request method is POST or Get.
 //   - Send http.StatusRequestEntityTooLarge if the size of the request
 //     exceeds the value of the variable spec.MaxRequestBytes..
 func NewCacheHandler(
@@ -118,7 +131,7 @@ func NewCacheHandler(
 		handler.logger = &log.Logger
 	}
 
-	chain = chain.Append(handleNotallowedMethod)
+	chain = chain.Append(handleHTTPMethod)
 	chain = chain.Append(handleOverMaxRequestBytes(handler.maxRequestBytes))
 
 	return chain.Then(handler)
@@ -164,6 +177,8 @@ func addSuccessOCSPResHeader(w http.ResponseWriter, cache *cache.ResponseCache, 
 	w.Header().Add("ETag", cache.SHA1HashHexString())
 }
 
+var ErrUnexpectedHTTPMethod = errors.New("unexpected HTTP method")
+
 // ServeHTTP handles an OCSP request with following  steps.
 //   - Verify that the request is in the correct form of an OCSP request.
 //     If the request is Malformed, it sends ocsp.MalformedRequestErrorResponse.
@@ -175,7 +190,17 @@ func addSuccessOCSPResHeader(w http.ResponseWriter, cache *cache.ResponseCache, 
 // This Handler add headers Headers introduced in RFC5019.
 // (https://www.rfc-editor.org/rfc/rfc5019#section-5)
 func (c CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
+	var body []byte
+	var err error
+
+	switch r.Method {
+	case http.MethodGet:
+		body, err = base64.StdEncoding.DecodeString(path.Base(r.URL.Path))
+	case http.MethodPost:
+		body, err = io.ReadAll(r.Body)
+	default:
+		err = ErrUnexpectedHTTPMethod
+	}
 	if err != nil {
 		return
 	}
