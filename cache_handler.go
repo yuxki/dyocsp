@@ -198,6 +198,7 @@ func (c CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
+		logger.Debug().Err(err).Str("ocsp-request-path", r.URL.Path).Msg("")
 		body, err = base64.StdEncoding.DecodeString(path.Base(r.URL.Path))
 	case http.MethodPost:
 		body, err = io.ReadAll(r.Body)
