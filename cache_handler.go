@@ -214,7 +214,7 @@ func (c CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	ocspReq, err := ocsp.ParseRequest(body)
 	if err != nil {
-		logger.Debug().Err(err).Msg("")
+		logger.Debug().Err(err).Bytes("ocsp-request-bytes", body).Msg("")
 		_, err = w.Write(ocsp.MalformedRequestErrorResponse)
 		if err != nil {
 			logger.Error().Err(err).Msg("")
