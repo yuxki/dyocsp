@@ -2,10 +2,12 @@ package dyocsp
 
 import (
 	"bytes"
+	"encoding/base64"
 	"io"
 	"math/big"
 	"net"
 	"net/http"
+	stduri "net/url"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -105,6 +107,9 @@ func TestCacheHandler_ServeHTTP_Methods(t *testing.T) {
 
 		code := http.StatusMethodNotAllowed
 		if method == http.MethodPost {
+			code = http.StatusOK
+		}
+		if method == http.MethodGet {
 			code = http.StatusOK
 		}
 		if res.StatusCode != code {
@@ -297,7 +302,42 @@ func testHTTPResContent(t *testing.T, responder *Responder, res *http.Response, 
 	}
 }
 
-func testHandler(t *testing.T, port string, handler http.Handler, responder *Responder) *http.Response {
+func testHandlerWithGETMethod(t *testing.T, port string, handler http.Handler, responder *Responder) *http.Response {
+	t.Helper()
+
+	s, url := testCreateServer(t, port, handler)
+
+	go func() {
+		err := s.ListenAndServe()
+		if err != nil {
+			log.Printf("Server listening error: %s", err.Error())
+		}
+	}()
+
+	testServerRunning(t, url)
+
+	var opts *ocsp.RequestOptions
+	rawReq, err := ocsp.CreateRequest(responder.rCert, responder.issuerCert, opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	base64Req := base64.StdEncoding.EncodeToString(rawReq)
+
+	url, err = stduri.JoinPath(url, base64Req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := http.Get(url)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return res
+}
+
+func testHandlerWithPOSTMethod(t *testing.T, port string, handler http.Handler, responder *Responder) *http.Response {
 	t.Helper()
 
 	s, url := testCreateServer(t, port, handler)
@@ -326,7 +366,7 @@ func testHandler(t *testing.T, port string, handler http.Handler, responder *Res
 	return res
 }
 
-func TestCacheHandler_ServeHTTP_ResponseSuccess(t *testing.T) {
+func TestCacheHandler_ServeHTTP_GET_ResponseSuccess(t *testing.T) {
 	t.Parallel()
 
 	responder := testCreateDelegatedResponder(t)
@@ -339,7 +379,28 @@ func TestCacheHandler_ServeHTTP_ResponseSuccess(t *testing.T) {
 		WithMaxRequestBytes(512), WithMaxAge(256),
 	)
 
-	res := testHandler(t, "8090", handler, responder)
+	res := testHandlerWithGETMethod(t, "8090", handler, responder)
+	defer res.Body.Close()
+
+	template := resCache.Template()
+	testHTTPResHeader(t, res.Header, &template)
+	testHTTPResContent(t, responder, res, resCache)
+}
+
+func TestCacheHandler_ServeHTTP_POST_ResponseSuccess(t *testing.T) {
+	t.Parallel()
+
+	responder := testCreateDelegatedResponder(t)
+	resCache := testCreateDummyCache(t, responder, 500)
+	cacheStore := cache.NewResponseCacheStore()
+	cacheStore.Update([]cache.ResponseCache{resCache})
+
+	handler := NewCacheHandler(
+		cacheStore.NewReadOnlyCacheStore(), responder, alice.New(),
+		WithMaxRequestBytes(512), WithMaxAge(256),
+	)
+
+	res := testHandlerWithPOSTMethod(t, "8090", handler, responder)
 	defer res.Body.Close()
 
 	template := resCache.Template()
@@ -357,7 +418,7 @@ func TestCacheHandler_ServeHTTP_ResponseFailed_DiffIssuer(t *testing.T) {
 		WithMaxRequestBytes(512), WithMaxAge(256),
 	)
 
-	res := testHandler(t, "8085", handler, responder)
+	res := testHandlerWithPOSTMethod(t, "8085", handler, responder)
 	defer res.Body.Close()
 
 	ocspRes, err := io.ReadAll(res.Body)
@@ -380,7 +441,7 @@ func TestCacheHandler_ServeHTTP_ResponseFailed_SerialNotMatched(t *testing.T) {
 		WithMaxRequestBytes(512), WithMaxAge(256),
 	)
 
-	res := testHandler(t, "8086", handler, responder)
+	res := testHandlerWithPOSTMethod(t, "8086", handler, responder)
 	defer res.Body.Close()
 
 	ocspRes, err := io.ReadAll(res.Body)
@@ -407,7 +468,7 @@ func TestCacheHandler_ServeHTTP_NowIsOverNextUpdate(t *testing.T) {
 		WithMaxRequestBytes(512), WithMaxAge(256),
 	)
 
-	res := testHandler(t, "8087", handler, responder)
+	res := testHandlerWithPOSTMethod(t, "8087", handler, responder)
 	defer res.Body.Close()
 
 	ocspRes, err := io.ReadAll(res.Body)
@@ -436,7 +497,7 @@ func TestCacheHandler_ServeHTTP_MaxAgeOverNextUpdate(t *testing.T) {
 		WithMaxRequestBytes(512), WithMaxAge(256),
 	)
 
-	res := testHandler(t, "8088", handler, responder)
+	res := testHandlerWithPOSTMethod(t, "8088", handler, responder)
 	defer res.Body.Close()
 
 	cc := res.Header.Get("Cache-Control")
