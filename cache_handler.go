@@ -104,7 +104,7 @@ const (
 // NewCacheHandler creates a new instance of dyocsp.CacheHandler.
 // It chains the following handlers before the handler that sends the OCSP response.
 // (It uses 'https://github.com/justinas/alice' to chain the handlers.)
-//   - Send http.StatusMethodNotAllowed unless the request method is POST.
+//   - Send http.StatusMethodNotAllowed unless the request method is POST or Get.
 //   - Send http.StatusRequestEntityTooLarge if the size of the request
 //     exceeds the value of the variable spec.MaxRequestBytes..
 func NewCacheHandler(
