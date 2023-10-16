@@ -190,6 +190,9 @@ var ErrUnexpectedHTTPMethod = errors.New("unexpected HTTP method")
 // This Handler add headers Headers introduced in RFC5019.
 // (https://www.rfc-editor.org/rfc/rfc5019#section-5)
 func (c CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Set logger attributes same as access log
+	logger := c.logger.With().Str("ip", r.RemoteAddr).Str("user_agent", r.UserAgent()).Logger()
+
 	var body []byte
 	var err error
 
@@ -202,11 +205,9 @@ func (c CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		err = ErrUnexpectedHTTPMethod
 	}
 	if err != nil {
+		logger.Error().Err(err).Msg("")
 		return
 	}
-
-	// Set logger attributes same as access log
-	logger := c.logger.With().Str("ip", r.RemoteAddr).Str("user_agent", r.UserAgent()).Logger()
 
 	// Handle as OCSP request
 	w.Header().Add("Content-Type", "application/ocsp-response")
