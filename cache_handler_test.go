@@ -379,7 +379,7 @@ func TestCacheHandler_ServeHTTP_GET_ResponseSuccess(t *testing.T) {
 		WithMaxRequestBytes(512), WithMaxAge(256),
 	)
 
-	res := testHandlerWithGETMethod(t, "8090", handler, responder)
+	res := testHandlerWithGETMethod(t, "8091", handler, responder)
 	defer res.Body.Close()
 
 	template := resCache.Template()
