@@ -11,7 +11,7 @@ The objective is to have a responder with flexible database backend choices.
 - Get the latest binary from [releases](https://github.com/yuxki/dyocsp/releases).
 - Or pull [docker image](https://hub.docker.com/r/yuxki/dyocsp):
 ```
-docker pull yuxki/dyocsp:v0.1.0
+docker pull yuxki/dyocsp:v0.2.6
 ```
 - Or get the sources:
 ```
