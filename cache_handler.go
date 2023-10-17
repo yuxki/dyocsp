@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"path"
 	"reflect"
 	"strings"
 	"time"
@@ -199,9 +198,9 @@ func (c CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		base := strings.TrimPrefix(path.Base(r.URL.Path), "/")
-		logger.Debug().Err(err).Str("ocsp-request-path", base).Msg("")
-		body, err = base64.StdEncoding.DecodeString(base)
+		reqPath := strings.TrimPrefix(r.URL.Path, "/")
+		logger.Debug().Err(err).Str("ocsp-request-path", reqPath).Msg("")
+		body, err = base64.StdEncoding.DecodeString(reqPath)
 	case http.MethodPost:
 		body, err = io.ReadAll(r.Body)
 	default:
