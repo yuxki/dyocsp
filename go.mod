@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.32.8
 	github.com/google/go-cmp v0.6.0
 	github.com/justinas/alice v1.2.0
-	github.com/rs/zerolog v1.32.0
+	github.com/rs/zerolog v1.33.0
 	golang.org/x/crypto v0.23.0
 	gopkg.in/yaml.v3 v3.0.1
 )
