@@ -36,7 +36,7 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Build test target dyocsp image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v6
         with:
           context: .
           load: true
@@ -47,7 +47,7 @@ jobs:
           cp -r scripts integration/
           mkdir -p integration/tmp-cas
           ./scripts/gen-certs.sh integration/tmp-cas
-      - uses: docker/build-push-action@v4
+      - uses: docker/build-push-action@v6
         with:
           context: integration
           load: true
