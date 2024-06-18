@@ -1,4 +1,4 @@
-FROM golang:1.20.7-alpine3.18
+FROM golang:1.22.3-alpine3.18
 
 RUN apk add --no-cache gcompat
 
