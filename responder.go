@@ -67,7 +67,7 @@ func createIssuerSHA1Hash(input []byte) ([]byte, error) {
 
 	sha := sha1.New()
 
-	_, err := io.WriteString(sha, string(cInput))
+	_, err := io.Writer.Write(sha, cInput)
 	if err != nil {
 		return nil, err
 	}

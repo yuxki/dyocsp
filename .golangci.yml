@@ -1,9 +1,5 @@
 ---
 linters-settings:
-  staticcheck:
-    go: '1.23'
-  stylecheck:
-    go: '1.23'
   gocyclo:
     min-complexity: 15
   exhaustive:
@@ -69,19 +65,12 @@ linters-settings:
 linters:
   enable-all: true
   disable:
-    # Deprecated
-    - exhaustivestruct
-    - golint
-    - maligned
-    - deadcode
-    - ifshort
-    - varcheck
-    - interfacer
-    - structcheck
-    - nosnakecase
-    - scopelint
-    - structcheck
+    # Temp
+    - copyloopvar
+    - err113
     - exhaustruct
+    - predeclared
+    - perfsprint
     # Opt outs
     - testpackage # Too Strict
     - wrapcheck # Too Strict
