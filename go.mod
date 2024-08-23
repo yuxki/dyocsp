@@ -3,7 +3,7 @@ module github.com/yuxki/dyocsp
 go 1.23
 
 require (
-	github.com/aws/aws-sdk-go-v2/config v1.27.29
+	github.com/aws/aws-sdk-go-v2/config v1.27.30
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.14.12
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.6
 	github.com/google/go-cmp v0.6.0
