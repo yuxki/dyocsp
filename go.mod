@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.29.7
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.18.5
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.40.2
-	github.com/google/go-cmp v0.6.0
+	github.com/google/go-cmp v0.7.0
 	github.com/justinas/alice v1.2.0
 	github.com/rs/zerolog v1.33.0
 	golang.org/x/crypto v0.33.0
