@@ -1,6 +1,7 @@
 module github.com/yuxki/dyocsp
 
 go 1.23
+toolchain go1.24.1
 
 require (
 	github.com/aws/aws-sdk-go-v2/config v1.29.11
@@ -9,7 +10,7 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/justinas/alice v1.2.0
 	github.com/rs/zerolog v1.34.0
-	golang.org/x/crypto v0.33.0
+	golang.org/x/crypto v0.35.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -28,7 +29,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.29.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.17 // indirect
 	github.com/aws/smithy-go v1.22.2 // indirect
-	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/rs/xid v1.6.0 // indirect
