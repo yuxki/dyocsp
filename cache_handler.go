@@ -27,10 +27,6 @@ func handleHTTPMethod(h http.Handler) http.Handler {
 		switch r.Method {
 		case http.MethodPost:
 		case http.MethodGet:
-			if r.ContentLength > int64(GETMethodMaxRequestSize) {
-				w.WriteHeader(http.StatusMethodNotAllowed)
-				return
-			}
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
@@ -44,9 +40,15 @@ func handleOverMaxRequestBytes(limit int) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if limit > 0 {
-				if r.ContentLength > int64(limit) {
-					w.WriteHeader(http.StatusRequestEntityTooLarge)
-					return
+				switch r.Method {
+				case http.MethodGet:
+					reqPath := strings.TrimPrefix(r.URL.Path, "/")
+					if len(reqPath) > base64.StdEncoding.EncodedLen(limit) {
+						w.WriteHeader(http.StatusRequestEntityTooLarge)
+						return
+					}
+				case http.MethodPost:
+					r.Body = http.MaxBytesReader(w, r.Body, int64(limit))
 				}
 			}
 			h.ServeHTTP(w, r)
@@ -199,6 +201,10 @@ func (c CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		reqPath := strings.TrimPrefix(r.URL.Path, "/")
+		if c.maxRequestBytes > 0 && len(reqPath) > base64.StdEncoding.EncodedLen(c.maxRequestBytes) {
+			w.WriteHeader(http.StatusRequestEntityTooLarge)
+			return
+		}
 		logger.Debug().Err(err).Str("ocsp-request-path", reqPath).Msg("")
 		body, err = base64.StdEncoding.DecodeString(reqPath)
 	case http.MethodPost:
@@ -207,7 +213,20 @@ func (c CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		err = ErrUnexpectedHTTPMethod
 	}
 	if err != nil {
+		var maxBytesErr *http.MaxBytesError
+		if errors.As(err, &maxBytesErr) {
+			w.WriteHeader(http.StatusRequestEntityTooLarge)
+			return
+		}
 		logger.Error().Err(err).Msg("")
+		return
+	}
+	if c.maxRequestBytes > 0 && len(body) > c.maxRequestBytes {
+		w.WriteHeader(http.StatusRequestEntityTooLarge)
+		return
+	}
+	if r.Method == http.MethodGet && len(body) > GETMethodMaxRequestSize {
+		w.WriteHeader(http.StatusRequestEntityTooLarge)
 		return
 	}
 
