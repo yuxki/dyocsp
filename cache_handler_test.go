@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	stduri "net/url"
 	"reflect"
 	"regexp"
@@ -148,6 +149,48 @@ func TestCacheHandler_ServeHTTP_OverMaxRequestSize(t *testing.T) {
 
 	if res.StatusCode != http.StatusRequestEntityTooLarge {
 		t.Errorf("Expected status code is 413 but got: %d", res.StatusCode)
+	}
+}
+
+func TestCacheHandler_ServeHTTP_OverMaxRequestSize_ChunkedPOST(t *testing.T) {
+	t.Parallel()
+
+	cacheStore := cache.NewResponseCacheStore()
+	responder := testCreateDelegatedResponder(t)
+	handler := NewCacheHandler(
+		cacheStore.NewReadOnlyCacheStore(), responder, alice.New(),
+		WithMaxRequestBytes(1), WithMaxAge(256),
+	)
+
+	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader([]byte{0xFF, 0xFF, 0xFF}))
+	req.ContentLength = -1
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusRequestEntityTooLarge {
+		t.Errorf("Expected status code is 413 but got: %d", rec.Code)
+	}
+}
+
+func TestCacheHandler_ServeHTTP_OverMaxRequestSize_GETPath(t *testing.T) {
+	t.Parallel()
+
+	cacheStore := cache.NewResponseCacheStore()
+	responder := testCreateDelegatedResponder(t)
+	handler := NewCacheHandler(
+		cacheStore.NewReadOnlyCacheStore(), responder, alice.New(),
+		WithMaxRequestBytes(10), WithMaxAge(256),
+	)
+
+	oversizedReqPath := "/" + base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{0xFF}, 11))
+	req := httptest.NewRequest(http.MethodGet, oversizedReqPath, nil)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusRequestEntityTooLarge {
+		t.Errorf("Expected status code is 413 but got: %d", rec.Code)
 	}
 }
 

@@ -17,6 +17,7 @@ func CreateHTTPServer(
 		Handler:           handler,
 		ReadTimeout:       time.Duration(cfg.ReadTimeout),
 		WriteTimeout:      time.Second * time.Duration(cfg.WriteTimeout),
+		IdleTimeout:       time.Second * time.Duration(cfg.WriteTimeout),
 		ReadHeaderTimeout: time.Second * time.Duration(cfg.ReadHeaderTimeout),
 		MaxHeaderBytes:    cfg.MaxHeaderBytes,
 	}
