@@ -92,7 +92,7 @@ func TestMain_InternalIntegration(t *testing.T) {
 	for {
 		res, err := http.Get(endpoint)
 		if err == nil {
-			res.Body.Close()
+			_ = res.Body.Close()
 			break
 		}
 		tryN--
@@ -109,7 +109,7 @@ func TestMain_InternalIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	rawRes, err := io.ReadAll(res.Body)
 	if err != nil {

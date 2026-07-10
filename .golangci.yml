@@ -72,6 +72,8 @@ linters:
     - exhaustruct
     - predeclared
     - perfsprint
+    - funcorder
+    - usetesting
     # Opt outs
     - testpackage # Too Strict
     - wrapcheck # Too Strict
@@ -100,6 +102,10 @@ linters:
           - maintidx # Too strict
           - lll # Too strict
         path: '((.+)_test|testing)\.go'
+      - text: Potential file inclusion via variable
+        path: '((.+)_test|testing)\.go'
+        linters:
+          - gosec
       - text: Potential HTTP request made with variable url
         path: '((.+)_test|testing)\.go'
         linters:

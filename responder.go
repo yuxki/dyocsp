@@ -391,10 +391,10 @@ func (r *Responder) SignCacheResponse(cache cache.ResponseCache) (cache.Response
 	var err error
 
 	var ok bool
-	switch {
-	case r.rKeyAlg == AlgRSA:
+	switch r.rKeyAlg {
+	case AlgRSA:
 		priv, ok = r.getPrivateKeyAsRSA()
-	case r.rKeyAlg == AlgECDSA:
+	case AlgECDSA:
 		priv, ok = r.getPrivateKeyAsECDSA()
 	}
 	if !ok {

@@ -40,11 +40,11 @@ func handleHTTPMethod(h http.Handler) http.Handler {
 	})
 }
 
-func handleOverMaxRequestBytes(max int) func(http.Handler) http.Handler {
+func handleOverMaxRequestBytes(limit int) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if max > 0 {
-				if r.ContentLength > int64(max) {
+			if limit > 0 {
+				if r.ContentLength > int64(limit) {
 					w.WriteHeader(http.StatusRequestEntityTooLarge)
 					return
 				}
@@ -73,9 +73,9 @@ type CacheHandlerOption func(*CacheHandler)
 // of a request exceeds this parameter, the handler will respond with
 // http.StatusRequestEntityTooLarge. Default value is 0, and if 0 or less than 0 is
 // set, this option is ignored.
-func WithMaxRequestBytes(max int) func(*CacheHandler) {
+func WithMaxRequestBytes(limit int) func(*CacheHandler) {
 	return func(c *CacheHandler) {
-		c.maxRequestBytes = max
+		c.maxRequestBytes = limit
 	}
 }
 
@@ -84,9 +84,9 @@ func WithMaxRequestBytes(max int) func(*CacheHandler) {
 // If the duration until the nextUpdate of a cached response exceeds MaxAge,
 // the handler sets the response's Cache-Control max-age directive to that duration.
 // Default value is 0. If less than 0 is set, the default value is used.
-func WithMaxAge(max int) func(*CacheHandler) {
+func WithMaxAge(maxAge int) func(*CacheHandler) {
 	return func(c *CacheHandler) {
-		c.maxAge = max
+		c.maxAge = maxAge
 	}
 }
 

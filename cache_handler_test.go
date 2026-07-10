@@ -48,7 +48,7 @@ func testServerRunning(t *testing.T, url string) {
 	for {
 		res, err := http.Get(url)
 		if err == nil {
-			res.Body.Close()
+			_ = res.Body.Close()
 			break
 		}
 		tryN--
@@ -103,7 +103,7 @@ func TestCacheHandler_ServeHTTP_Methods(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 
 		code := http.StatusMethodNotAllowed
 		if method == http.MethodPost {
@@ -144,7 +144,7 @@ func TestCacheHandler_ServeHTTP_OverMaxRequestSize(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusRequestEntityTooLarge {
 		t.Errorf("Expected status code is 413 but got: %d", res.StatusCode)
@@ -177,7 +177,7 @@ func Test_CacheHandler_ServeHTTP_MalformedRequest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
 		t.Errorf("Expected status code is 200 but got: %d", res.StatusCode)
@@ -380,7 +380,7 @@ func TestCacheHandler_ServeHTTP_GET_ResponseSuccess(t *testing.T) {
 	)
 
 	res := testHandlerWithGETMethod(t, "8091", handler, responder)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	template := resCache.Template()
 	testHTTPResHeader(t, res.Header, &template)
@@ -401,7 +401,7 @@ func TestCacheHandler_ServeHTTP_POST_ResponseSuccess(t *testing.T) {
 	)
 
 	res := testHandlerWithPOSTMethod(t, "8090", handler, responder)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	template := resCache.Template()
 	testHTTPResHeader(t, res.Header, &template)
@@ -419,7 +419,7 @@ func TestCacheHandler_ServeHTTP_ResponseFailed_DiffIssuer(t *testing.T) {
 	)
 
 	res := testHandlerWithPOSTMethod(t, "8085", handler, responder)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	ocspRes, err := io.ReadAll(res.Body)
 	if err != nil {
@@ -442,7 +442,7 @@ func TestCacheHandler_ServeHTTP_ResponseFailed_SerialNotMatched(t *testing.T) {
 	)
 
 	res := testHandlerWithPOSTMethod(t, "8086", handler, responder)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	ocspRes, err := io.ReadAll(res.Body)
 	if err != nil {
@@ -469,7 +469,7 @@ func TestCacheHandler_ServeHTTP_NowIsOverNextUpdate(t *testing.T) {
 	)
 
 	res := testHandlerWithPOSTMethod(t, "8087", handler, responder)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	ocspRes, err := io.ReadAll(res.Body)
 	if err != nil {
@@ -498,7 +498,7 @@ func TestCacheHandler_ServeHTTP_MaxAgeOverNextUpdate(t *testing.T) {
 	)
 
 	res := testHandlerWithPOSTMethod(t, "8088", handler, responder)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	cc := res.Header.Get("Cache-Control")
 	ccSecReg := regexp.MustCompile("[0-9]+")
