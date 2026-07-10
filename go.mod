@@ -1,6 +1,6 @@
 module github.com/yuxki/dyocsp
 
-go 1.23
+go 1.24
 
 require (
 	github.com/aws/aws-sdk-go-v2/config v1.29.11

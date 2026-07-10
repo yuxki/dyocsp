@@ -2,7 +2,6 @@ package dyocsp
 
 import (
 	"encoding/asn1"
-	"encoding/binary"
 	"fmt"
 )
 
@@ -14,6 +13,7 @@ const (
 
 	tagLen       = 1
 	shortFormLen = 1
+	bitsPerByte  = 8
 )
 
 func skipIDAndLenOctets(octets []byte, offset int) int {
@@ -32,11 +32,16 @@ func skipIDAndLenOctets(octets []byte, offset int) int {
 func skipIDAndLenAndContOctets(octets []byte, offset int) int {
 	offset += tagLen // Identifier octet - 1byte
 	if octets[offset]&longFormCheckMask > 0 {
-		lenLen := ((octets[offset] << 1) >> 1)
+		lenLen := int((octets[offset] << 1) >> 1)
 		offset++
-		conLen := int(binary.BigEndian.Uint64(octets[offset:lenLen]))
-		offset += int(lenLen) // length octet
-		offset += conLen      // content octet
+
+		var conLen int
+		for i := range lenLen {
+			conLen = (conLen << bitsPerByte) | int(octets[offset+i])
+		}
+
+		offset += lenLen // length octet
+		offset += conLen // content octet
 	} else {
 		offset += shortFormLen          // length octet
 		offset += int(octets[offset-1]) // content octet
