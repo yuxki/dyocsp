@@ -15,7 +15,7 @@ func CreateHTTPServer(
 	return &http.Server{
 		Addr:              host,
 		Handler:           handler,
-		ReadTimeout:       time.Duration(cfg.ReadTimeout),
+		ReadTimeout:       time.Second * time.Duration(cfg.ReadTimeout),
 		WriteTimeout:      time.Second * time.Duration(cfg.WriteTimeout),
 		IdleTimeout:       time.Second * time.Duration(cfg.WriteTimeout),
 		ReadHeaderTimeout: time.Second * time.Duration(cfg.ReadHeaderTimeout),

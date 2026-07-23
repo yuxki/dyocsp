@@ -133,6 +133,17 @@ func parsePKCS8PrivKey(block *pem.Block) (crypto.PrivateKey, error) {
 	return key, nil
 }
 
+func decodePEM(input []byte, resource pKIResource) (*pem.Block, error) {
+	block, rest := pem.Decode(input)
+	if block == nil {
+		return nil, invalidPKIResourceError{resource, "PEM block not found."}
+	}
+	if len(bytes.TrimSpace(rest)) != 0 {
+		return nil, invalidPKIResourceError{resource, "unexpected data found after PEM block."}
+	}
+	return block, nil
+}
+
 func detectPrivKeyAlgorithm(key crypto.PrivateKey) (KeyAlg, bool) {
 	_, ok := key.(*rsa.PrivateKey)
 	if ok {
@@ -183,7 +194,10 @@ func detectAuthType(cert *x509.Certificate) AuthorizedType {
 // returns a new dyocsp.Responder instance.
 func BuildResponder(rCertPem, rPrivKeyPem, issuerCertPem []byte, nowT time.Time) (*Responder, error) {
 	// Parse Responder Certificate
-	rCertblock, _ := pem.Decode(rCertPem)
+	rCertblock, err := decodePEM(rCertPem, responderCert)
+	if err != nil {
+		return nil, err
+	}
 	rCert, err := x509.ParseCertificate(rCertblock.Bytes)
 	if err != nil {
 		return nil, err
@@ -191,7 +205,10 @@ func BuildResponder(rCertPem, rPrivKeyPem, issuerCertPem []byte, nowT time.Time)
 
 	// Parse Responder Key
 	rKeyFormat := detectPrivKeyPemFormat(rPrivKeyPem)
-	keyblock, _ := pem.Decode(rPrivKeyPem)
+	keyblock, err := decodePEM(rPrivKeyPem, responderKey)
+	if err != nil {
+		return nil, err
+	}
 	var rPrivKey crypto.PrivateKey
 	switch rKeyFormat {
 	case PKCS8:
@@ -211,7 +228,10 @@ func BuildResponder(rCertPem, rPrivKeyPem, issuerCertPem []byte, nowT time.Time)
 	}
 
 	// Parse Issuer Certificate
-	iCertblock, _ := pem.Decode(issuerCertPem)
+	iCertblock, err := decodePEM(issuerCertPem, issuerCert)
+	if err != nil {
+		return nil, err
+	}
 	iCert, err := x509.ParseCertificate(iCertblock.Bytes)
 	if err != nil {
 		return nil, err
