@@ -180,6 +180,36 @@ func addSuccessOCSPResHeader(w http.ResponseWriter, cache *cache.ResponseCache, 
 }
 
 var ErrUnexpectedHTTPMethod = errors.New("unexpected HTTP method")
+var errRequestTooLarge = errors.New("request too large")
+
+func readOCSPRequestBody(r *http.Request, maxRequestBytes int) ([]byte, error) {
+	var body []byte
+	var err error
+
+	switch r.Method {
+	case http.MethodGet:
+		reqPath := strings.TrimPrefix(r.URL.Path, "/")
+		if maxRequestBytes > 0 && len(reqPath) > base64.StdEncoding.EncodedLen(maxRequestBytes) {
+			return nil, errRequestTooLarge
+		}
+		body, err = base64.StdEncoding.DecodeString(reqPath)
+	case http.MethodPost:
+		body, err = io.ReadAll(r.Body)
+	default:
+		return nil, ErrUnexpectedHTTPMethod
+	}
+	if err != nil {
+		return nil, err
+	}
+	if maxRequestBytes > 0 && len(body) > maxRequestBytes {
+		return nil, errRequestTooLarge
+	}
+	if r.Method == http.MethodGet && len(body) > GETMethodMaxRequestSize {
+		return nil, errRequestTooLarge
+	}
+
+	return body, nil
+}
 
 // ServeHTTP handles an OCSP request with following  steps.
 //   - Verify that the request is in the correct form of an OCSP request.
@@ -195,38 +225,14 @@ func (c CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Set logger attributes same as access log
 	logger := c.logger.With().Str("ip", r.RemoteAddr).Str("user_agent", r.UserAgent()).Logger()
 
-	var body []byte
-	var err error
-
-	switch r.Method {
-	case http.MethodGet:
-		reqPath := strings.TrimPrefix(r.URL.Path, "/")
-		if c.maxRequestBytes > 0 && len(reqPath) > base64.StdEncoding.EncodedLen(c.maxRequestBytes) {
-			w.WriteHeader(http.StatusRequestEntityTooLarge)
-			return
-		}
-		logger.Debug().Err(err).Str("ocsp-request-path", reqPath).Msg("")
-		body, err = base64.StdEncoding.DecodeString(reqPath)
-	case http.MethodPost:
-		body, err = io.ReadAll(r.Body)
-	default:
-		err = ErrUnexpectedHTTPMethod
-	}
+	body, err := readOCSPRequestBody(r, c.maxRequestBytes)
 	if err != nil {
 		var maxBytesErr *http.MaxBytesError
-		if errors.As(err, &maxBytesErr) {
+		if errors.Is(err, errRequestTooLarge) || errors.As(err, &maxBytesErr) {
 			w.WriteHeader(http.StatusRequestEntityTooLarge)
 			return
 		}
 		logger.Error().Err(err).Msg("")
-		return
-	}
-	if c.maxRequestBytes > 0 && len(body) > c.maxRequestBytes {
-		w.WriteHeader(http.StatusRequestEntityTooLarge)
-		return
-	}
-	if r.Method == http.MethodGet && len(body) > GETMethodMaxRequestSize {
-		w.WriteHeader(http.StatusRequestEntityTooLarge)
 		return
 	}
 
