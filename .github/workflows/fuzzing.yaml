@@ -2,6 +2,10 @@
 name: Run Fuzzing Tests
 
 on: [push]
+
+permissions:
+  contents: read
+
 jobs:
   fuzzing:
     runs-on: ubuntu-latest
