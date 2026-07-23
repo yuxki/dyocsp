@@ -1,9 +1,14 @@
 ---
 version: "2"
 
+run:
+  go: "1.26.5"
+
 linters:
   default: all
   settings:
+    goconst:
+      min-occurrences: 5
     gocyclo:
       min-complexity: 15
     exhaustive:
@@ -26,6 +31,7 @@ linters:
       excludes:
         - G401 # OCSP responder uses SHA1
         - G505 # OCSP responder uses SHA1
+        - G706 # Errors are intentionally written to the application log
     revive:
       rules:
         - name: struct-tag
@@ -74,6 +80,10 @@ linters:
     - perfsprint
     - funcorder
     - usetesting
+    - godoclint
+    - modernize
+    - noinlineerr
+    - wsl_v5
     # Opt outs
     - testpackage # Too Strict
     - wrapcheck # Too Strict
@@ -83,6 +93,7 @@ linters:
     - nonamedreturns # Too Strict
     - cyclop # Use gocyclo
     - exhaustive # Use gocyclo
+    - gomodguard # Use gomodguard_v2
   exclusions:
     rules:
       - linters:
