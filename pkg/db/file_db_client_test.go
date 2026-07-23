@@ -55,6 +55,14 @@ func TestFileDBClient_Scan(t *testing.T) {
 					"",
 					"",
 				},
+				{
+					"test-ca",
+					"1984",
+					"R",
+					"250717054417Z",
+					"240717082249Z",
+					"",
+				},
 				{ // Not tab delimited
 					"test-ca",
 					"",

@@ -74,8 +74,9 @@ func (h FileDBClient) Scan(ctx context.Context) (entries []IntermidiateEntry, er
 			case FileDBColExpDateIdx:
 				entry.ExpDate = cols[idx]
 			case FileDBColRevDateAndCRLReasonIdx:
-				if rc := strings.Split(cols[idx], ","); len(rc) == IdxCRLReason+1 {
-					entry.RevDate = rc[IdxRevDate]
+				rc := strings.SplitN(cols[idx], ",", IdxCRLReason+1)
+				entry.RevDate = rc[IdxRevDate]
+				if len(rc) == IdxCRLReason+1 {
 					entry.CRLReason = rc[IdxCRLReason]
 				}
 			case FileDBColSerialIdx:
