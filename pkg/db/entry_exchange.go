@@ -89,12 +89,6 @@ func (e *EntryExchange) VerifyRevType(
 				msg:  fmt.Sprintf("rev_status is %s but rev_date does not exist", Revoked),
 			}
 		}
-		if crlReason == "" {
-			return "", InvalidEntryError{
-				attr: "rev_type",
-				msg:  fmt.Sprintf("rev_status is %s but crl_reason does not exist", Revoked),
-			}
-		}
 		return EntryRevType(target), nil
 	}
 
@@ -229,7 +223,12 @@ func (e *EntryExchange) ParseCertificateEntry(
 		verifyErros[MalformRevDate] = err
 	}
 
-	crlReason, err := e.VerifyCRLReason(itmdEntry.CRLReason)
+	crlReasonTarget := itmdEntry.CRLReason
+	if itmdEntry.RevType == string(Revoked) && crlReasonTarget == "" {
+		crlReasonTarget = UnspecifieValue
+	}
+
+	crlReason, err := e.VerifyCRLReason(crlReasonTarget)
 	if err != nil {
 		verifyErros[UndefinedCRLReason] = err
 	}

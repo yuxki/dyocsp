@@ -181,7 +181,7 @@ func TestEntryExchange_ParseCertificateEntry(t *testing.T) {
 			"failed exchange from Intermediate Entry to Certificate Entry: invalid rev_type: rev_status is R but rev_date does not exist",
 		},
 		{
-			"NG: RevType (conflicting situations: R but crl_reason is not exists)",
+			"OK: revoked without optional CRL reason",
 			IntermidiateEntry{
 				Ca:        "sub-ca",
 				Serial:    "72344BF34067BBA31EF44587CBFB16631332CD23",
@@ -190,11 +190,11 @@ func TestEntryExchange_ParseCertificateEntry(t *testing.T) {
 				RevDate:   "230813125631Z",
 				CRLReason: "",
 			},
-			time.Time{},
-			time.Time{},
+			time.Date(2033, 8, 9, 12, 33, 17, 0, time.UTC),
+			time.Date(2023, 8, 13, 12, 56, 31, 0, time.UTC),
 			Unspecified,
-			UndefinedRevType,
-			"failed exchange from Intermediate Entry to Certificate Entry: invalid rev_type: rev_status is R but crl_reason does not exist",
+			0,
+			"",
 		},
 		{
 			"NG: ExpDate",
