@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
@@ -78,7 +79,7 @@ func UnmarshalDynamoDBItem(item map[string]types.AttributeValue) (IntermidiateEn
 		return IntermidiateEntry{}, err
 	}
 
-	revType, err := unmarshalItem(item, "rev_type")
+	revType, err := unmarshalItem(item, revTypeAttribute)
 	if err != nil {
 		return IntermidiateEntry{}, err
 	}
@@ -106,6 +107,18 @@ func UnmarshalDynamoDBItem(item map[string]types.AttributeValue) (IntermidiateEn
 		RevDate:   revDate,
 		CRLReason: crlReason,
 	}, nil
+}
+
+func unmarshalDynamoDBItems(items []map[string]types.AttributeValue) ([]IntermidiateEntry, error) {
+	entries := make([]IntermidiateEntry, 0, len(items))
+	for idx := range items {
+		entry, err := UnmarshalDynamoDBItem(items[idx])
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal DynamoDB item %d: %w", idx, err)
+		}
+		entries = append(entries, entry)
+	}
+	return entries, nil
 }
 
 // Scan read sthe items from the table.
@@ -150,14 +163,5 @@ func (d DynamoDBClient) Scan(ctx context.Context) ([]IntermidiateEntry, error) {
 		break
 	}
 
-	entries := make([]IntermidiateEntry, 0, len(items))
-	for i := range items {
-		e, err := UnmarshalDynamoDBItem(items[i])
-		if err != nil {
-			continue
-		}
-		entries = append(entries, e)
-	}
-
-	return entries, nil
+	return unmarshalDynamoDBItems(items)
 }
