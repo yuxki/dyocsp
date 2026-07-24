@@ -10,14 +10,22 @@ import (
 )
 
 // The DynamoDBClient is an implementation of the CADBClient interface. It is used
-// to scan the certificate revocation status from the DynamoDB. Please refer to the
+// to query the certificate revocation status from DynamoDB. Please refer to the
 // documentation for specifications on the table and index.
 type DynamoDBClient struct {
-	client    *dynamodb.Client
+	client    dynamoDBQueryAPI
 	caName    *string
 	tableName *string
 	indexName *string
 	timeout   int
+}
+
+type dynamoDBQueryAPI interface {
+	Query(
+		ctx context.Context,
+		input *dynamodb.QueryInput,
+		optFns ...func(*dynamodb.Options),
+	) (*dynamodb.QueryOutput, error)
 }
 
 // NewDynamoDBClient creates and returns new DynamoDBClient instance.
@@ -73,12 +81,12 @@ func UnmarshalDynamoDBItem(item map[string]types.AttributeValue) (IntermidiateEn
 		return IntermidiateEntry{}, err
 	}
 
-	serial, err := unmarshalItem(item, "serial")
+	serial, err := unmarshalItem(item, serialAttribute)
 	if err != nil {
 		return IntermidiateEntry{}, err
 	}
 
-	revType, err := unmarshalItem(item, "rev_type")
+	revType, err := unmarshalItem(item, revTypeAttribute)
 	if err != nil {
 		return IntermidiateEntry{}, err
 	}
@@ -108,13 +116,13 @@ func UnmarshalDynamoDBItem(item map[string]types.AttributeValue) (IntermidiateEn
 	}, nil
 }
 
-// Scan read sthe items from the table.
-// Set the filter expression to the secondary global index with the "ca" hash key.
+// Scan reads the items for a CA from the configured global secondary index.
+// Set the key condition expression using the "ca" partition key.
 // Retrieve the items and unmarshal them into IntermediateEntry.
 func (d DynamoDBClient) Scan(ctx context.Context) ([]IntermidiateEntry, error) {
-	var input dynamodb.ScanInput
+	var input dynamodb.QueryInput
 
-	fex := "ca = :ca"
+	keyCondition := "ca = :ca"
 	pje := "ca,serial,rev_type,exp_date,rev_date,crl_reason"
 	eav, err := attributevalue.MarshalMap(map[string]string{":ca": *d.caName})
 	if err != nil {
@@ -124,7 +132,7 @@ func (d DynamoDBClient) Scan(ctx context.Context) ([]IntermidiateEntry, error) {
 	input.TableName = d.tableName
 	input.IndexName = d.indexName
 	input.Select = "SPECIFIC_ATTRIBUTES"
-	input.FilterExpression = &fex
+	input.KeyConditionExpression = &keyCondition
 	input.ExpressionAttributeValues = eav
 	input.ProjectionExpression = &pje
 
@@ -136,7 +144,7 @@ func (d DynamoDBClient) Scan(ctx context.Context) ([]IntermidiateEntry, error) {
 	for {
 		input.ExclusiveStartKey = lastEvaluatedKey
 
-		out, err := d.client.Scan(ctx, &input)
+		out, err := d.client.Query(ctx, &input)
 		if err != nil {
 			return nil, err
 		}
