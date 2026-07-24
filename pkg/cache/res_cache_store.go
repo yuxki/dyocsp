@@ -18,7 +18,7 @@ import (
 type ResponseCacheStore struct {
 	cacheMap  map[string]ResponseCache
 	now       date.Now
-	UpdatedAt time.Time
+	updatedAt time.Time
 	mu        sync.RWMutex
 }
 
@@ -29,7 +29,7 @@ func NewResponseCacheStore() *ResponseCacheStore {
 	return &ResponseCacheStore{
 		cacheMap:  cacheMap,
 		now:       date.NowGMT,
-		UpdatedAt: updatedAt,
+		updatedAt: updatedAt,
 	}
 }
 
@@ -45,17 +45,7 @@ func cacheMapKey(s *big.Int) (string, bool) {
 // This method returns nil when there are no duplicated serial numbers in the
 // ocsp response and returns the duplicated serial numbers when they exist.
 func (r *ResponseCacheStore) Update(caches []ResponseCache) []ResponseCache {
-	defer func() {
-		r.UpdatedAt = r.now()
-	}()
-
 	invalids := make([]ResponseCache, 0, len(caches))
-
-	if caches == nil {
-		r.cacheMap = make(map[string]ResponseCache, 0)
-		return invalids
-	}
-
 	cacheMap := make(map[string]ResponseCache, len(caches))
 	duplSet := make(map[string]struct{}, len(caches))
 
@@ -92,9 +82,18 @@ func (r *ResponseCacheStore) Update(caches []ResponseCache) []ResponseCache {
 
 	r.mu.Lock()
 	r.cacheMap = cacheMap
+	r.updatedAt = r.now()
 	r.mu.Unlock()
 
 	return invalids
+}
+
+// UpdatedAt returns the time at which the cache store was last replaced.
+func (r *ResponseCacheStore) UpdatedAt() time.Time {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	return r.updatedAt
 }
 
 // Truncate resets/deletes all caches.
@@ -118,9 +117,8 @@ func (r *ResponseCacheStore) Get(serialNumber *big.Int) (*ResponseCache, bool) {
 	// Copy the cache map address for data protection
 	// from replacing address by the updating cache job
 	r.mu.RLock()
-	cm := r.cacheMap
+	cache, ok = r.cacheMap[key]
 	r.mu.RUnlock()
-	cache, ok = cm[key]
 	if !ok {
 		return nil, false
 	}

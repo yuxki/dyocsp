@@ -3,6 +3,7 @@ package cache
 import (
 	"math/big"
 	"reflect"
+	"sync"
 	"testing"
 	"time"
 
@@ -16,9 +17,35 @@ func TestNewResponseCacheStore(t *testing.T) {
 
 	cacheStore := NewResponseCacheStore()
 	now := date.NowGMT()
-	if cacheStore.UpdatedAt.Compare(now) == 1 {
-		t.Errorf("UpdateAt is later than Now(%#v): %#v", now, cacheStore.UpdatedAt)
+	if cacheStore.UpdatedAt().Compare(now) == 1 {
+		t.Errorf("UpdateAt is later than Now(%#v): %#v", now, cacheStore.UpdatedAt())
 	}
+}
+
+func TestResponseCacheStoreConcurrentAccess(t *testing.T) {
+	t.Parallel()
+
+	serial := big.NewInt(42)
+	responseCache := ResponseCache{
+		template: ocsp.Response{SerialNumber: serial},
+		response: []byte("signed response"),
+	}
+	store := NewResponseCacheStore()
+
+	var waitGroup sync.WaitGroup
+	for range 4 {
+		waitGroup.Add(1)
+		go func() {
+			defer waitGroup.Done()
+			for range 100 {
+				store.Update([]ResponseCache{responseCache})
+				store.Get(serial)
+				store.UpdatedAt()
+				_ = store.Truncate()
+			}
+		}()
+	}
+	waitGroup.Wait()
 }
 
 func TestResponseCacheStore_Update_Get_Delete(t *testing.T) {
@@ -185,7 +212,7 @@ func TestResponseCacheStore_Update_Get_Delete(t *testing.T) {
 				t.Fatalf("Initial CacheStore returns false as ok but got: %#v", ok)
 			}
 
-			preAtUpdate := cacheStore.UpdatedAt
+			preAtUpdate := cacheStore.UpdatedAt()
 			cacheStore.now = func() time.Time { return time.Date(2033, 8, 9, 12, 30, 0, 0, time.UTC) }
 
 			// Update cache store
@@ -193,8 +220,8 @@ func TestResponseCacheStore_Update_Get_Delete(t *testing.T) {
 			if !reflect.DeepEqual(invalds, d.invalidCaches) {
 				t.Errorf("Expected invalid caches are %#v but: %#v", d.invalidCaches, invalds)
 			}
-			if preAtUpdate.Compare(cacheStore.UpdatedAt) == 1 {
-				t.Errorf("UpdateAt is later than previous updation(%#v): %#v", preAtUpdate, cacheStore.UpdatedAt)
+			if preAtUpdate.Compare(cacheStore.UpdatedAt()) == 1 {
+				t.Errorf("UpdateAt is later than previous updation(%#v): %#v", preAtUpdate, cacheStore.UpdatedAt())
 			}
 
 			cacheStore.now = func() time.Time { return time.Date(2033, 8, 9, 12, 30, 1, 0, time.UTC) }
@@ -211,13 +238,13 @@ func TestResponseCacheStore_Update_Get_Delete(t *testing.T) {
 				t.Errorf("Expected got cache is %#v but: %#v", d.gotCache, gotCache)
 			}
 
-			preAtUpdate = cacheStore.UpdatedAt
+			preAtUpdate = cacheStore.UpdatedAt()
 			cacheStore.now = func() time.Time { return time.Date(2033, 8, 9, 12, 30, 2, 0, time.UTC) }
 
 			// Truncate cache store
 			_ = cacheStore.Truncate()
-			if preAtUpdate.Compare(cacheStore.UpdatedAt) == 1 {
-				t.Errorf("UpdateAt is later than previous updation(%#v): %#v", preAtUpdate, cacheStore.UpdatedAt)
+			if preAtUpdate.Compare(cacheStore.UpdatedAt()) == 1 {
+				t.Errorf("UpdateAt is later than previous updation(%#v): %#v", preAtUpdate, cacheStore.UpdatedAt())
 			}
 			gotCache, ok = cacheStore.Get(serialGetNumber)
 			if ok {
