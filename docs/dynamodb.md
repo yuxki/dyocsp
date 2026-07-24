@@ -17,7 +17,9 @@ This key is not used in DyOCSP, but it is useful for managing revocation informa
 | ----------- | ----------- | ----------- |
 |ca|S|HASH|
 
-DyOCSP uses this global secondary index for utilizing the [Scan API](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Scan.html).
+DyOCSP uses this global secondary index with the
+[Query API](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Query.html)
+to retrieve only the configured CA partition.
 
 #### Required Attributes for An Items
 |AttributeName|AttributeType|Description|
@@ -53,9 +55,9 @@ The following IAM policy will suffice for DyOCSP:
         {
             "Effect": "Allow",
             "Action": [
-                "dynamodb:Scan"
+                "dynamodb:Query"
             ],
-            "Resource": "arn:aws:dynamodb:your-region:your-aws-id:table/ca_db"
+            "Resource": "arn:aws:dynamodb:your-region:your-aws-id:table/ca_db/index/ca-index"
         }
     ]
 }
