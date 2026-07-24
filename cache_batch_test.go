@@ -160,6 +160,42 @@ func TestNewCacheBatch_ErrDelayExceedsInterval(t *testing.T) {
 	}
 }
 
+func TestCacheBatchRunStopsWhenContextCanceled(t *testing.T) {
+	t.Parallel()
+
+	client := StubCADBClient{"test-ca", []db.IntermidiateEntry{}}
+	store := cache.NewResponseCacheStore()
+	updated := make(chan struct{})
+	batch, err := NewCacheBatch(
+		"test-ca",
+		store,
+		client,
+		testCreateDelegatedResponder(t),
+		date.NowGMT(),
+		WithIntervalSec(60),
+		WithUpdatedNotifyChan(updated),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		batch.Run(ctx)
+	}()
+
+	<-updated
+	cancel()
+
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("Run() did not stop after context cancellation")
+	}
+}
+
 func TestCacheBatch_Run_DBNotChanged(t *testing.T) {
 	t.Parallel()
 

@@ -4,11 +4,14 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 	stdlog "log"
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
@@ -78,12 +81,12 @@ func newFileDBClient(cfg config.DyOCSPConfig) (db.FileDBClient, error) {
 	return db.NewFileDBClient(cfg.CA, cfg.FileDBFile), nil
 }
 
-func newDynamoDBClient(cfg config.DyOCSPConfig) (db.DynamoDBClient, error) {
+func newDynamoDBClient(ctx context.Context, cfg config.DyOCSPConfig) (db.DynamoDBClient, error) {
 	ca := cfg.CA
 	caTable := cfg.DynamoDBTableName
 	caGsi := cfg.DynamoDBCAGsi
 
-	aCfg, err := awsconfig.LoadDefaultConfig(context.TODO(),
+	aCfg, err := awsconfig.LoadDefaultConfig(ctx,
 		awsconfig.WithRegion(cfg.DynamoDBRegion),
 		awsconfig.WithRetryMaxAttempts(cfg.DynamoDBRetryMaxAttempts),
 	)
@@ -124,11 +127,12 @@ func chainHTTPAccessHandler(c alice.Chain) alice.Chain {
 	return chain
 }
 
-func run(cfg config.DyOCSPConfig, responder *dyocsp.Responder) error {
+const shutdownTimeout = 10 * time.Second
+
+func run(ctx context.Context, cfg config.DyOCSPConfig, responder *dyocsp.Responder) error {
 	setupLogger(cfg)
 
-	rootCtx := context.Background()
-	rootCtx, cancel := context.WithCancel(rootCtx)
+	rootCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	// Create DB client
@@ -139,7 +143,7 @@ func run(cfg config.DyOCSPConfig, responder *dyocsp.Responder) error {
 	case config.FileDBType:
 		dbClient, err = newFileDBClient(cfg)
 	case config.DynamoDBType:
-		dbClient, err = newDynamoDBClient(cfg)
+		dbClient, err = newDynamoDBClient(ctx, cfg)
 	default:
 		err = config.MissingParameterError{Param: "db.<db-type>"}
 	}
@@ -151,8 +155,6 @@ func run(cfg config.DyOCSPConfig, responder *dyocsp.Responder) error {
 	cacheStore := cache.NewResponseCacheStore()
 
 	// Create CacheBatch
-	quite := make(chan string)
-
 	blogger := log.Logger.With().Str("role", cacheBatchRole).Logger()
 	batch, err := dyocsp.NewCacheBatch(
 		cfg.CA,
@@ -165,14 +167,17 @@ func run(cfg config.DyOCSPConfig, responder *dyocsp.Responder) error {
 		dyocsp.WithDelay(time.Second*time.Duration(cfg.Delay)),
 		dyocsp.WithStrict(cfg.Strict),
 		dyocsp.WithLogger(&blogger),
-		dyocsp.WithQuiteChan(quite),
 	)
 	if err != nil {
 		return err
 	}
 
 	// Run batch generating caches
-	go batch.Run(rootCtx)
+	batchDone := make(chan struct{})
+	go func() {
+		defer close(batchDone)
+		batch.Run(rootCtx)
+	}()
 
 	// Create Server
 	hLogger := log.Logger.With().Str("role", CacheHandlerRole).Logger()
@@ -197,19 +202,31 @@ func run(cfg config.DyOCSPConfig, responder *dyocsp.Responder) error {
 		cacheHander,
 	)
 
-	// Run Server
-	err = server.ListenAndServe()
-	if err != nil {
-		if errors.Is(err, http.ErrServerClosed) {
-			panic(err)
-		}
-		cancel()
-		quite <- "Quite on error"
-		stdlog.Printf("Batch loop quited: received message from caching batch: %s", <-quite)
-		stdlog.Fatalf("error:listening server: %v", err)
-	}
+	serverError := make(chan error, 1)
+	go func() {
+		serverError <- server.ListenAndServe()
+	}()
 
-	return nil
+	select {
+	case err = <-serverError:
+		cancel()
+		<-batchDone
+		if errors.Is(err, http.ErrServerClosed) {
+			return nil
+		}
+		return fmt.Errorf("listening server: %w", err)
+	case <-ctx.Done():
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.WithoutCancel(ctx), shutdownTimeout)
+		defer shutdownCancel()
+
+		shutdownErr := server.Shutdown(shutdownCtx)
+		cancel()
+		<-batchDone
+		if shutdownErr != nil {
+			return fmt.Errorf("shutting down server: %w", shutdownErr)
+		}
+		return nil
+	}
 }
 
 func main() {
@@ -257,7 +274,10 @@ func main() {
 
 	responder := newResponder(cfg)
 
-	err = run(cfg, responder)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	err = run(ctx, cfg, responder)
 	if err != nil {
 		stdlog.Fatal(err)
 	}
