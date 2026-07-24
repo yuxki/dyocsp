@@ -1,5 +1,7 @@
 package db
 
+const revTypeAttribute = "rev_type"
+
 // IntermediateEntry is a struct that holds raw data scanned from the database
 // without any modifications. This structure handles variations in data originating
 // from diverse background databases.

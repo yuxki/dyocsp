@@ -69,13 +69,13 @@ func (e *EntryExchange) VerifyRevType(
 	if target == string(Valid) {
 		if revDate != "" {
 			return "", InvalidEntryError{
-				attr: "rev_type",
+				attr: revTypeAttribute,
 				msg:  fmt.Sprintf("rev_status is %s but rev_date exists", Valid),
 			}
 		}
 		if crlReason != "" {
 			return "", InvalidEntryError{
-				attr: "rev_type",
+				attr: revTypeAttribute,
 				msg:  fmt.Sprintf("rev_status is %s but crl_reason exists", Valid),
 			}
 		}
@@ -85,7 +85,7 @@ func (e *EntryExchange) VerifyRevType(
 	if target == string(Revoked) {
 		if revDate == "" {
 			return "", InvalidEntryError{
-				attr: "rev_type",
+				attr: revTypeAttribute,
 				msg:  fmt.Sprintf("rev_status is %s but rev_date does not exist", Revoked),
 			}
 		}
@@ -93,7 +93,7 @@ func (e *EntryExchange) VerifyRevType(
 	}
 
 	return "", InvalidEntryError{
-		attr: "rev_type",
+		attr: revTypeAttribute,
 		msg:  target,
 	}
 }
