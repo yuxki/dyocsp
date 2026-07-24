@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/x509"
 	"encoding/pem"
 	"io"
@@ -85,7 +86,22 @@ func TestMain_InternalIntegration(t *testing.T) {
 
 	// Run Responder Batch & Server
 	responder := newResponder(cfg)
-	go run(cfg, responder)
+	ctx, cancel := context.WithCancel(context.Background())
+	runError := make(chan error, 1)
+	go func() {
+		runError <- run(ctx, cfg, responder)
+	}()
+	defer func() {
+		cancel()
+		select {
+		case err := <-runError:
+			if err != nil {
+				t.Errorf("run() error = %v", err)
+			}
+		case <-time.After(shutdownTimeout + time.Second):
+			t.Error("run() did not stop after context cancellation")
+		}
+	}()
 
 	endpoint := "http://localhost:9080"
 	tryN := 20

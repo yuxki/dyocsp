@@ -304,28 +304,26 @@ func (c *CacheBatch) logBatchSummary(ctx context.Context, start time.Time) {
 		Msg("Cache generation batch completed.")
 }
 
-func (c *CacheBatch) waitForNextUpdate(ctx context.Context, waitDur time.Duration) {
+func (c *CacheBatch) waitForNextUpdate(ctx context.Context, waitDur time.Duration) bool {
 	logger := zerolog.Ctx(ctx)
 
 	logger.Info().Dur("wait", waitDur).
 		Time("next-update", c.nextUpdate).
 		Msg("Waiting for the next update.")
 
-	if c.quite != nil {
-	outer:
-		for {
-			select {
-			case <-time.After(waitDur):
-				break outer
-			case msg := <-c.quite:
-				// Stop when it received quite message
-				logger.Info().Msgf("Quite message received, stop loop: %s", msg)
-				c.quite <- "Loop stopped."
-				return
-			}
-		}
-	} else {
-		time.Sleep(waitDur)
+	timer := time.NewTimer(waitDur)
+	defer timer.Stop()
+
+	select {
+	case <-timer.C:
+		return true
+	case <-ctx.Done():
+		logger.Info().Msg("Context canceled, stop loop.")
+		return false
+	case msg := <-c.quite:
+		logger.Info().Msgf("Quite message received, stop loop: %s", msg)
+		c.quite <- "Loop stopped."
+		return false
 	}
 }
 
@@ -343,6 +341,10 @@ func (c *CacheBatch) waitForNextUpdate(ctx context.Context, waitDur time.Duratio
 //   - Wait for next update.
 func (c *CacheBatch) Run(ctx context.Context) {
 	for {
+		if ctx.Err() != nil {
+			return
+		}
+
 		startTime := c.now()
 
 		logger := c.logger.With().Int("batch_serial", c.batchSerial).Logger()
@@ -360,7 +362,11 @@ func (c *CacheBatch) Run(ctx context.Context) {
 		logger.Info().Msg("Response cache updated.")
 
 		if c.updatedNotify != nil {
-			c.updatedNotify <- struct{}{}
+			select {
+			case c.updatedNotify <- struct{}{}:
+			case <-ctx.Done():
+				return
+			}
 		}
 
 		// Summury of this loop batch
@@ -372,7 +378,9 @@ func (c *CacheBatch) Run(ctx context.Context) {
 		c.nextUpdate = c.nextUpdate.Add(c.interval)
 
 		// Wait for next update
-		c.waitForNextUpdate(ctx, waitDur)
+		if !c.waitForNextUpdate(ctx, waitDur) {
+			return
+		}
 
 		c.batchSerial++
 	}
