@@ -18,6 +18,46 @@ func cnvSerialStr2BigInt(serialStr string) *big.Int {
 	return serial
 }
 
+func TestBuildResponderRejectsInvalidPEM(t *testing.T) {
+	t.Parallel()
+
+	readTestFile := func(name string) []byte {
+		t.Helper()
+		data, err := os.ReadFile("testdata/" + name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return data
+	}
+
+	validCert := readTestFile("sub-ocsp-rsa.crt")
+	validKey := readTestFile("sub-ocsp-rsa-pkcs8.key")
+	validIssuer := readTestFile("sub-ca-rsa.crt")
+
+	tests := []struct {
+		name       string
+		cert       []byte
+		key        []byte
+		issuer     []byte
+		wantErrMsg string
+	}{
+		{"missing responder certificate PEM", []byte("not PEM"), validKey, validIssuer, "invalid responder certificate: PEM block not found."},
+		{"missing private key PEM", validCert, []byte("not PEM"), validIssuer, "invalid private Key: PEM block not found."},
+		{"missing issuer certificate PEM", validCert, validKey, []byte("not PEM"), "invalid issuer certificate: PEM block not found."},
+		{"trailing responder certificate data", append(validCert, []byte("\nunexpected")...), validKey, validIssuer, "invalid responder certificate: unexpected data found after PEM block."},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			_, err := BuildResponder(tt.cert, tt.key, tt.issuer, time.Now())
+			if err == nil || err.Error() != tt.wantErrMsg {
+				t.Fatalf("BuildResponder() error = %v, want %q", err, tt.wantErrMsg)
+			}
+		})
+	}
+}
+
 func TestBuildResponder(t *testing.T) {
 	t.Parallel()
 	data := []struct {
