@@ -86,6 +86,9 @@ func (h FileDBClient) Scan(ctx context.Context) (entries []IntermidiateEntry, er
 		}
 		entries = append(entries, entry)
 	}
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("could not scan file DB %s: %w", h.dbFile, err)
+	}
 
 	return entries, nil
 }

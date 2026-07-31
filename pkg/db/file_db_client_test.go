@@ -2,6 +2,8 @@ package db
 
 import (
 	"context"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -106,5 +108,26 @@ func TestFileDBClient_Scan(t *testing.T) {
 				t.Error(diff)
 			}
 		})
+	}
+}
+
+func TestFileDBClientScanReturnsScannerError(t *testing.T) {
+	t.Parallel()
+
+	dbFile := t.TempDir() + "/oversized-index"
+	if err := os.WriteFile(dbFile, []byte(strings.Repeat("x", 64*1024+1)), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	client := NewFileDBClient("test-ca", dbFile)
+	entries, err := client.Scan(context.Background())
+	if err == nil {
+		t.Fatal("Scan() error = nil, want scanner error")
+	}
+	if entries != nil {
+		t.Fatalf("Scan() entries = %#v, want nil", entries)
+	}
+	if !strings.Contains(err.Error(), "could not scan file DB") {
+		t.Fatalf("Scan() error = %q, want file DB context", err)
 	}
 }
