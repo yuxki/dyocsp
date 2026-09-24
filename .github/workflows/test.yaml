@@ -45,7 +45,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v7
         with:
-          version: v2.12.2
+          version: v2.14.0
 
   integration:
     uses: ./.github/workflows/integration.yaml
